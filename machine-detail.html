@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>机器详情（货道映射）— 交互原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #1e1e1e; color: #eee; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; }
+body { min-height: 100vh; padding: 0; }
+
+.master-layout { display: block; width: 100%; max-width: 1600px; margin: 0 auto; padding: 24px 16px; box-sizing: border-box; }
+.page-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 16px; padding: 0 8px; }
+.page-wrapper { display: flex; gap: 24px; padding: 0 8px; align-items: flex-start; flex-wrap: nowrap; }
+.phone-group { display: flex; gap: 24px; flex-wrap: nowrap; overflow-x: auto; min-width: 0; flex-shrink: 1; padding-bottom: 8px; }
+.phone-group::-webkit-scrollbar { height: 8px; }
+.phone-group::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 4px; }
+
+/* ====== 手机画框 (iPhone 16 Pro 尺寸) ====== */
+.phone { width: 375px; min-width: 375px; background: #F2F2F7; height: 812px; position: relative; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); border-radius: 48px; flex-shrink: 0; display: flex; flex-direction: column; }
+.phone-label { position: absolute; top: -22px; left: 0; font-size: 12px; color: #888; font-weight: 500; }
+
+/* 状态栏 + 导航 */
+.status { background: #fff; padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #222; flex-shrink: 0; }
+.status-icons { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+.status-icons .ic { width: 16px; height: 11px; background: #222; border-radius: 2px; }
+.nav { background: #fff; padding: 8px 16px 12px; display: flex; align-items: center; justify-content: space-between; position: relative; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; }
+.nav-back { font-size: 18px; color: #222; cursor: pointer; padding: 4px 8px; }
+.nav-title { font-size: 16px; font-weight: 600; color: #222; position: absolute; left: 50%; transform: translateX(-50%); }
+.nav-right { font-size: 14px; color: #EF9F27; cursor: pointer; padding: 4px 8px; }
+
+/* 通用滚动区 */
+.scroll { flex: 1; overflow-y: auto; padding: 12px 16px 90px; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { width: 0; }
+
+/* 步骤指示 */
+.steps { background: #fff; padding: 10px 16px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; }
+.step-dot { width: 18px; height: 18px; border-radius: 50%; background: #E5E5E5; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.step-dot.active { background: #EF9F27; }
+.step-dot.done { background: #5DCAA5; }
+.step-line { flex: 1; height: 2px; background: #E5E5E5; }
+.step-line.done { background: #5DCAA5; }
+.step-label { font-size: 11px; color: #888; margin-left: 4px; }
+.step-label.active { color: #EF9F27; font-weight: 600; }
+
+/* 列表项 */
+.cell-group { background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.cell { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; min-height: 48px; }
+.cell:last-child { border-bottom: none; }
+.cell-label { font-size: 14px; color: #888; width: 88px; flex-shrink: 0; }
+.cell-value { flex: 1; font-size: 14px; color: #222; }
+.cell-value.placeholder { color: #bbb; }
+.cell-value.with-icon { display: flex; align-items: center; gap: 6px; }
+.cell-arrow { color: #c0c0c0; font-size: 14px; margin-left: 8px; }
+.cell-icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; color: #888; }
+
+.scan-icon { width: 18px; height: 18px; border: 1.5px solid #c0c0c0; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+.scan-icon::before { content: ''; position: absolute; inset: 2px; border: 1px dashed #c0c0c0; border-radius: 1px; }
+
+/* 按钮 */
+.btn-primary { width: 100%; height: 48px; background: #EF9F27; color: #fff; border: none; border-radius: 24px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-primary:disabled { background: #FFE8C2; cursor: not-allowed; }
+.btn-secondary { width: 100%; height: 48px; background: #fff; color: #222; border: 1px solid #E5E5E5; border-radius: 24px; font-size: 16px; font-weight: 500; cursor: pointer; }
+.btn-text { background: transparent; color: #EF9F27; border: none; font-size: 14px; cursor: pointer; padding: 6px 12px; }
+
+.bottom-bar { padding: 16px; background: #fff; position: absolute; left: 0; right: 0; bottom: 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
+.bottom-bar .btn { width: 100%; }
+
+/* 选机型 */
+.machine-pick { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.machine-pick-title { font-size: 13px; color: #888; margin-bottom: 12px; }
+.machine-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border: 2px solid #EF9F27; border-radius: 12px; background: #FFF6E8; }
+.machine-card-img { width: 64px; height: 80px; background: linear-gradient(180deg, #ddd 0%, #fff 30%, #fff 60%, #ddd 100%); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #888; overflow: hidden; }
+.machine-card-img::before { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 24px; background: repeating-linear-gradient(0deg, #EF9F27 0px, #EF9F27 4px, transparent 4px, transparent 8px); opacity: 0.7; border-radius: 2px; }
+.machine-card-img::after { content: 'PUSH'; position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 8px; color: #fff; background: #EF9F27; padding: 2px 0; }
+.machine-card-name { font-size: 14px; color: #222; font-weight: 500; }
+
+/* ==== 步骤2 柜体双段卡（按图2编号绑定样式一比一：选择机型 + 货道配置） ==== */
+.cab-card { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.cab-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.cab-card-title { font-size: 15px; font-weight: 600; color: #222; }
+.cab-card-config { font-size: 13px; color: #EF9F27; cursor: pointer; user-select: none; }
+.cab-block-label { font-size: 13px; color: #888; margin-bottom: 10px; }
+.cab-machine-card { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px; border: 2px solid #EF9F27; border-radius: 10px; background: #FFF6E8; }
+.cab-machine-img { width: 52px; height: 64px; background: linear-gradient(180deg, #ddd 0%, #fff 30%, #fff 60%, #ddd 100%); border-radius: 5px; position: relative; overflow: hidden; }
+.cab-machine-img::before { content: ''; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 18px; background: repeating-linear-gradient(0deg, #EF9F27 0px, #EF9F27 3px, transparent 3px, transparent 7px); opacity: 0.7; border-radius: 2px; }
+.cab-machine-img::after { content: 'PUSH'; position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 7px; color: #fff; background: #EF9F27; padding: 1px 0; }
+.cab-machine-name { font-size: 12px; color: #EF9F27; font-weight: 500; }
+.cab-cfg-card { background: #FAFAFA; border-radius: 8px; padding: 14px 16px; }
+.cab-cfg-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; line-height: 1.9; }
+.cab-cfg-row b { color: #222; font-weight: 600; min-width: 36px; }
+.cab-cfg-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #888; margin-top: 8px; padding-top: 10px; border-top: 1px dashed #E5E5E5; }
+.cab-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.cab-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+.cab-legend-dot.amber { background: #EF9F27; }
+.cab-legend-dot.green { background: #5DCAA5; }
+
+/* ==== 步骤4：操作成功页（一比一还原） ==== */
+.success-status { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px 56px; background: #fff; }
+.success-icon { width: 72px; height: 72px; border-radius: 50%; background: #5DCAA5; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 600; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(93, 202, 165, 0.28); }
+.success-title { font-size: 22px; font-weight: 700; color: #222; letter-spacing: 1px; }
+.success-action { display: flex; gap: 14px; padding: 18px 16px; background: #F0F0F2; }
+.success-btn-outline { flex: 1; height: 44px; border-radius: 22px; background: #fff; color: #EF9F27; border: 1.5px solid #EF9F27; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity .2s; }
+.success-btn-outline:active { opacity: 0.7; }
+.success-btn-primary { flex: 1; height: 44px; border-radius: 22px; background: #EF9F27; color: #fff; border: none; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity .2s; }
+.success-btn-primary:active { opacity: 0.85; }
+
+/* 模板选择弹窗（底部弹出） */
+.modal-mask { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+.modal-mask.show { display: flex; }
+.modal-sheet { background: #F2F2F7; width: 100%; max-height: 80%; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; animation: slideUp .3s; box-shadow: 0 -4px 24px rgba(0,0,0,.15); overflow: hidden; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 8px auto; }
+.modal-header { padding: 4px 16px 12px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #f0f0f0; background: #fff; border-radius: 20px 20px 0 0; position: relative; }
+.modal-title { font-size: 16px; font-weight: 600; color: #222; text-align: center; padding: 0 32px; }
+.modal-close { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #888; padding: 4px 8px; cursor: pointer; line-height: 1; }
+.modal-body { flex: 1; overflow-y: auto; padding: 12px 16px; -webkit-overflow-scrolling: touch; }
+
+/* 搜索框（紧凑内嵌：图标 + input + 行内「搜索」按钮） */
+.search-bar { background: #fff; border-radius: 8px; padding: 5px 6px 5px 10px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; height: 36px; box-sizing: border-box; }
+.search-bar input { flex: 1; border: none; outline: none; font-size: 13px; background: transparent; color: #222; min-width: 0; }
+.search-bar input::placeholder { color: #b5b5b5; }
+.search-ic { color: #999; font-size: 14px; flex-shrink: 0; display: inline-flex; align-items: center; } .search-ic svg { width: 16px; height: 16px; display: block; }
+.search-btn { background: #EF9F27; color: #fff; border: 0; border-radius: 6px; padding: 0 12px; height: 26px; font-size: 12px; font-weight: 500; cursor: pointer; flex-shrink: 0; line-height: 1; }
+.search-btn:active { background: #C7801A; }
+
+/* 分类标签 */
+.tabs { display: flex; gap: 16px; padding: 0 4px; margin-bottom: 12px; overflow-x: auto; }
+.tab { font-size: 14px; color: #888; padding: 6px 0; white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
+.tab.active { color: #EF9F27; font-weight: 600; border-bottom-color: #EF9F27; }
+
+/* 模板卡片 */
+/* 模板卡片（与新增映射模板列表一致） */
+.tpl-card { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 10px; cursor: pointer; border: 2px solid transparent; transition: border-color .2s; }
+.tpl-card.selected { border-color: #EF9F27; background: #FFF6E8; }
+.tpl-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.tpl-name { font-size: 14px; font-weight: 600; color: #222; }
+.tpl-type-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: #fff; font-weight: 500; flex-shrink: 0; margin-left: 8px; background: #999; }
+.tpl-desc { font-size: 12px; color: #999; line-height: 1.5; margin-bottom: 6px; word-break: break-all; }
+.tpl-info { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.tpl-stat { font-size: 11px; color: #999; background: #F5F5F5; padding: 2px 7px; border-radius: 4px; }
+.tpl-stat b { color: #666; }
+.tpl-map-box { margin-top: 4px; padding: 8px; background: #FAFBFC; border: .5px solid #EFEFEF; border-radius: 8px; }
+.tpl-map-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.map-tag { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
+.tag-same { background: #E6F1FB; color: #378ADD; }
+.tag-incr { background: #E8F5EE; color: #5DCAA5; }
+.tag-custom { background: #FFF6E8; color: #EF9F27; }
+.map-tip { font-size: 10px; color: #999; margin-left: auto; }
+/* mini 矩阵（与新增映射模板列表一致） */
+.mini-mx { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; scrollbar-width: none; -ms-overflow-style: none; }
+.mini-mx::-webkit-scrollbar { display: none; }
+.mini-row { display: flex; gap: 2px; align-items: center; flex-wrap: nowrap; width: max-content; }
+.mini-row + .mini-row { margin-top: 2px; }
+.mini-rh { width: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; height: 34px; background: #FFF6E8; color: #EF9F27; border-radius: 3px; font-size: 10px; font-weight: 600; }
+.mini-cell { flex: 0 0 26px; width: 26px; min-width: 26px; max-width: 26px; height: 34px; display: grid; grid-template-rows: 1fr 1fr; align-items: center; justify-items: center; background: #fff; border: .5px solid #E8E8E8; border-radius: 3px; overflow: hidden; padding: 0; }
+.mini-cell .mc-sw { color: #378ADD; font-size: 7px; line-height: 1; font-weight: 600; font-family: monospace; align-self: end; padding-bottom: 1px; }
+.mini-cell .mc-hw { color: #EF9F27; font-size: 9px; line-height: 1; font-weight: 700; font-family: monospace; align-self: start; padding-top: 1px; }
+.mini-cell.same { background: #F5F5F5; }
+.mini-cell.same .mc-sw, .mini-cell.same .mc-hw { color: #999; }
+.mini-cell.more-row { flex: 1; min-width: 60px; background: #F5F5F5; color: #999; font-size: 9px; font-weight: 500; border-style: dashed; display: flex; align-items: center; justify-content: center; }
+.mini-row.expand-row { cursor: pointer; }
+.mini-row.expand-row:active .mini-cell.more-row { background: #E8E8E8; }
+
+/* 搜索无匹配占位 */
+.tpl-empty { padding: 40px 24px 24px; text-align: center; color: #888; }
+.tpl-empty-ic { font-size: 32px; margin-bottom: 10px; opacity: .55; }
+.tpl-empty-title { font-size: 14px; color: #666; font-weight: 500; margin-bottom: 6px; }
+.tpl-empty-sub { font-size: 12px; color: #999; line-height: 1.6; }
+.tpl-empty-clear { background: transparent; border: 0; color: #EF9F27; font-size: 12px; padding: 0 2px; cursor: pointer; }
+.tpl-empty-clear:active { color: #C7801A; }
+
+/* 列表底部行动 */
+.modal-footer { padding: 10px 12px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 10px; }
+.modal-footer .btn { flex: 1; height: 40px; font-size: 14px; border-radius: 20px; }
+
+/* 居中弹窗（保存/推送/成功/失败） */
+.center-mask { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: center; justify-content: center; }
+.center-mask.show { display: flex; }
+.center-dialog { background: #fff; border-radius: 16px; padding: 24px; width: 80%; max-width: 320px; text-align: center; }
+.center-dialog-title { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 8px; }
+.center-dialog-msg { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 20px; }
+.center-dialog-actions { display: flex; gap: 12px; }
+.center-dialog-actions .btn { flex: 1; height: 40px; font-size: 14px; border-radius: 20px; }
+.status-icon { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; }
+.status-icon.success { background: #5DCAA5; }
+.status-icon.error { background: #F55252; }
+.status-icon.warn { background: #EF9F27; font-size: 30px; }
+.status-icon.loading { background: #EF9F27; }
+.status-icon.loading::after { content: ''; width: 22px; height: 22px; border: 3px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 机器详情页 */
+.detail-header { background: #fff; padding: 16px; display: flex; gap: 12px; align-items: center; }
+.detail-img { width: 56px; height: 70px; background: linear-gradient(180deg, #ddd 0%, #fff 30%, #fff 60%, #ddd 100%); border-radius: 6px; position: relative; flex-shrink: 0; overflow: hidden; }
+.detail-img::before { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 24px; background: repeating-linear-gradient(0deg, #EF9F27 0px, #EF9F27 4px, transparent 4px, transparent 8px); opacity: 0.7; border-radius: 2px; }
+.detail-img::after { content: 'PUSH'; position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 8px; color: #fff; background: #EF9F27; padding: 2px 0; }
+.detail-info { flex: 1; }
+.detail-serial { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.detail-serial img { width: 14px; height: 14px; }
+.detail-line { font-size: 12px; color: #888; line-height: 1.7; }
+.detail-line .val { color: #222; }
+
+.feat-section { background: #fff; margin-top: 12px; padding: 16px 0 8px; }
+.feat-title { padding: 0 16px 12px; font-size: 15px; font-weight: 600; color: #222; }
+.feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 8px; }
+.feat-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; cursor: pointer; border-radius: 8px; }
+.feat-item:hover { background: #f8f8f8; }
+.feat-icon { width: 32px; height: 32px; background: #FFF6E8; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #EF9F27; }
+.feat-label { font-size: 11px; color: #222; text-align: center; }
+
+/* 货道映射矩阵 */
+.matrix-wrap { padding: 12px; flex: 1; overflow: auto; }
+.matrix-hint { font-size: 11px; color: #888; margin-bottom: 8px; padding: 0 4px; }
+.matrix-hint b { color: #EF9F27; font-weight: 600; }
+.matrix { font-size: 11px; }
+/* 行头：上下两段「软」(灰) /「物」(橙)，点行头选中/取消整层 */
+.lane-body { display: flex; gap: 4px; }
+.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.ra .seg.sw { background: #ECECEF; color: #8E8E93; }
+.ra .seg.gw { background: #FFF3E0; color: #EF9F27; }
+.cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: start; }
+/* 格子：上=软号（灰，自动生成只读，点击=选中）/ 下=物号（橙，点击=就地编辑） */；类名用 .mx 避免与详情列表 .cell 冲突
+.mx { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
+.mx .sw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; background: #F5F5F7; cursor: pointer; }
+.mx .gw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #EF9F27; background: #fff; border-top: 1px solid #F0F0F2; cursor: pointer; transition: background .12s; }
+.mx .gw.empty { color: #d0d0d0; font-weight: 400; }
+.mx .gw.empty::after { content: '+'; font-size: 13px; }
+.mx .gw.modified { background: #FFF6E8; }
+.mx .gw.editing { padding: 0; background: #fff; outline: 1.5px solid #EF9F27; outline-offset: -1.5px; }
+.mx .gw.editing input { width: 100%; height: 100%; border: none; outline: none; background: transparent; color: #EF9F27; font-size: 12px; font-weight: 600; text-align: center; font-family: inherit; -webkit-appearance: none; -moz-appearance: textfield; }
+.mx .gw.editing input::-webkit-outer-spin-button, .mx .gw.editing input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.matrix-toolbar { display: flex; gap: 6px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #f0f0f0; align-items: center; flex-wrap: nowrap; }
+.mt-btn { padding: 5px 9px; font-size: 11px; background: #fff; border: 1px solid #EF9F27; color: #EF9F27; border-radius: 14px; cursor: pointer; white-space: nowrap; }
+.mt-btn.primary { background: #EF9F27; color: #fff; }
+.mt-stat { font-size: 11px; color: #888; margin-left: auto; white-space: nowrap; }
+.mt-stat b { color: #EF9F27; font-weight: 600; }
+
+/* 需求说明面板 */
+.req-panel { width: 580px; flex-shrink: 0; background: #252525; border-radius: 12px; padding: 24px 24px; color: #ccc; word-wrap: break-word; overflow-wrap: break-word; align-self: flex-start; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; line-height: 1.7; }
+.req-panel-hd { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.req-panel-hd-title { flex: 1; min-width: 0; }
+.req-download-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; background: #EF9F27; color: #fff; font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 14px; text-decoration: none; transition: opacity .15s, background .15s; }
+.req-download-btn:hover { opacity: 0.9; }
+.req-download-btn:active { background: #d18b1c; }
+.req-download-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.req-section { background: #2c2c2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.req-section:last-child { margin-bottom: 0; }
+.req-h { font-size: 14px; font-weight: 600; color: #EF9F27; margin-bottom: 10px; padding-left: 8px; border-left: 3px solid #EF9F27; }
+.req-p { font-size: 13px; color: #b0b0b0; line-height: 1.9; margin-bottom: 8px; }
+.req-p:last-child { margin-bottom: 0; }
+.req-p strong { color: #fff; font-weight: 600; }
+.req-ul { list-style: none; padding: 0; }
+.req-ul li { font-size: 13px; color: #b0b0b0; line-height: 1.7; padding: 8px 0 8px 18px; border-bottom: 1px dashed #3a3a3a; position: relative; }
+.req-ul li:last-child { border-bottom: none; }
+.req-ul li::before { content: ''; position: absolute; left: 4px; top: 16px; width: 6px; height: 6px; background: #EF9F27; border-radius: 50%; }
+.req-ul li strong { color: #fff; font-weight: 600; margin-right: 4px; }
+
+/* 模板已选预览（编号绑定步骤3下方卡片） */
+.a-tpl-preview { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.a-tpl-preview-empty { font-size: 13px; color: #999; line-height: 1.6; padding: 6px 4px; }
+.a-tpl-preview-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.a-tpl-preview-name { font-size: 15px; font-weight: 600; color: #222; }
+.a-tpl-preview-action { font-size: 13px; color: #EF9F27; cursor: pointer; }
+.a-tpl-preview-meta { font-size: 12px; color: #888; margin-bottom: 10px; line-height: 1.6; }
+.a-tpl-preview-meta b { color: #666; font-weight: 600; }
+/* 完整点阵预览：每层独立成行，全部展示不折叠 */
+.a-tpl-preview-mx { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+.a-tpl-preview-mx::-webkit-scrollbar { display: none; }
+.a-tpl-preview-mx .mini-row { display: flex; gap: 2px; align-items: center; flex-wrap: nowrap; width: max-content; }
+.a-tpl-preview-mx .mini-row + .mini-row { margin-top: 2px; }
+.a-tpl-preview-mx .mini-rh { width: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; height: 34px; background: #FFF6E8; color: #EF9F27; border-radius: 3px; font-size: 10px; font-weight: 600; }
+.a-tpl-preview-mx .mini-cell { flex: 0 0 26px; width: 26px; min-width: 26px; max-width: 26px; height: 34px; display: grid; grid-template-rows: 1fr 1fr; align-items: center; justify-items: center; background: #fff; border: .5px solid #E8E8E8; border-radius: 3px; overflow: hidden; padding: 0; }
+.a-tpl-preview-mx .mini-cell .mc-sw { color: #378ADD; font-size: 7px; line-height: 1; font-weight: 600; font-family: monospace; align-self: end; padding-bottom: 1px; }
+.a-tpl-preview-mx .mini-cell .mc-hw { color: #EF9F27; font-size: 9px; line-height: 1; font-weight: 700; font-family: monospace; align-self: start; padding-top: 1px; }
+.a-tpl-preview-mx .mini-cell.same { background: #F5F5F5; }
+.a-tpl-preview-mx .mini-cell.same .mc-sw,
+.a-tpl-preview-mx .mini-cell.same .mc-hw { color: #999; }
+.a-tpl-preview-foot { font-size: 11px; color: #bbb; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #f0f0f0; }
+
+/* 短提示 */
+.toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+
+/* ==== 推送进度 toast（页面顶部黄条，含状态图标和重试按钮） ==== */
+.push-toast { position: fixed; left: 50%; top: 16px; transform: translate(-50%, -8px); display: flex; align-items: center; gap: 8px; background: #FFF6E8; color: #222; padding: 10px 14px; border-radius: 20px; font-size: 13px; box-shadow: 0 6px 24px rgba(0,0,0,.18); border: 1px solid #FFE8C2; z-index: 9500; max-width: 90vw; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+.push-toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.push-toast-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+.push-toast-icon.progress { background: #EF9F27; color: #fff; animation: spin 1.2s linear infinite; }
+.push-toast-icon.success { background: #2dc26b; color: #fff; }
+.push-toast-icon.fail { background: #F55252; color: #fff; }
+.push-toast-text { flex: 1; }
+.push-toast-action { color: #EF9F27; padding: 2px 10px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.push-toast-action:active { background: #FFE8C2; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast.show { opacity: 1; }
+
+/* 状态徽标 */
+.badge { display: inline-block; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin-left: 6px; }
+.badge.online { background: #E5F7EE; color: #2BA471; }
+.badge.offline { background: #FFEBEB; color: #F55252; }
+
+/* 柜体 Tab */
+.cab-tabs { display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; padding: 0 8px; overflow-x: auto; flex-shrink: 0; }
+.cab-tabs::-webkit-scrollbar { display: none; }
+.cab-tab { padding: 12px 14px; font-size: 13px; color: #888; white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
+.cab-tab.active { color: #EF9F27; font-weight: 600; border-bottom-color: #EF9F27; }
+/* 分柜预览块（步骤3） */
+.cab-block { border: 1px solid #f0f0f0; border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
+.cab-block-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cab-block-name { font-size: 13px; color: #222; font-weight: 600; }
+.cab-block-role { font-size: 10px; padding: 2px 6px; border-radius: 8px; background: #FFF6E8; color: #EF9F27; }
+.cab-block-meta { font-size: 11px; color: #999; margin-left: auto; }
+/* 推送状态明细 */
+.push-detail { background: #fff; border-radius: 12px; padding: 12px 14px; margin: 14px 0; text-align: left; }
+.push-cab-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; }
+.push-cab-row:last-child { border-bottom: none; }
+.push-cab-name { font-size: 13px; color: #222; }
+.push-cab-status { font-size: 12px; display: flex; align-items: center; gap: 6px; }
+.push-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.push-status-dot.loading { background: #EF9F27; }
+.push-status-dot.ok { background: #5DCAA5; }
+.push-status-dot.fail { background: #F55252; }
+.push-status-dot.wait { background: #ccc; }
+.push-retry { font-size: 12px; color: #EF9F27; cursor: pointer; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<div class="master-layout">
+  <div class="page-title">机器详情（货道映射）— 交互原型</div>
+  <div class="page-wrapper">
+
+    <div class="phone-group">
+
+      
+
+      <!-- ============ 手机B：机器详情 → 货道映射修改流程 ============ -->
+      <div class="phone">
+        <div class="phone-label">B · 机器详情 → 货道映射修改</div>
+        <div class="status"><span>9:41</span><span class="status-icons"><span class="ic"></span>5G📶🔋</span></div>
+        <div class="nav">
+          <span class="nav-back" id="bNavBack" onclick="bBack()" style="visibility:hidden">‹</span>
+          <span class="nav-title" id="bNavTitle">机器详情</span>
+          <span class="nav-right" style="visibility:hidden">···</span>
+        </div>
+
+        <!-- 详情页 -->
+        <div class="scroll" id="bPage1">
+          <div class="detail-header">
+            <div class="detail-img"></div>
+            <div class="detail-info">
+              <div class="detail-serial">📶 FPGT-THJ-8024970007</div>
+              <div class="detail-line">编号状态：<span class="val">已注册</span></div>
+              <div class="detail-line">支付码：<span class="val">——</span></div>
+            </div>
+          </div>
+          <div class="feat-section">
+            <div class="feat-title">全部功能</div>
+            <div class="feat-grid">
+              <div class="feat-item" onclick="bGoPage2()">
+                <div class="feat-icon">⊟</div>
+                <div class="feat-label">货道映射</div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-icon">⊙</div>
+                <div class="feat-label">货道检测</div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-icon">↑</div>
+                <div class="feat-label">固件升级</div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-icon">±</div>
+                <div class="feat-label">增删货道</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 货道映射矩阵 -->
+        <div id="bPage2" style="display:none;flex:1;flex-direction:column">
+          <div class="cab-tabs" id="bCabTabs"></div>
+          <div class="matrix-toolbar">
+            <button class="mt-btn" onclick="openTplForCab()">配置货道映射</button>
+            <button class="mt-btn" style="border-color:#bbb;color:#666" onclick="bClearMapping()">清空本柜</button>
+            <span class="mt-stat">已修改 <b id="bModifyCount">0</b> 项</span>
+          </div>
+          <div class="matrix-wrap">
+            <div class="matrix-hint">💡 上<b>软号</b>（灰·自动生成只读）下<b>物号</b>（橙）：点击物号可<b>单独编辑</b>（同层后续货道自动递增）；未在矩阵中显示的空格，点击"+ 号"可补填。各柜体映射独立编辑。</div>
+            <div class="matrix" id="bMatrix"></div>
+          </div>
+          <div class="bottom-bar">
+            <button class="btn btn-primary" onclick="bSave()">保存</button>
+          </div>
+        </div>
+
+        <!-- 模板选择弹窗-售后 -->
+        <div class="modal-mask" id="bTplModal">
+          <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+              <span class="modal-title" id="bTplModalTitle">为「主柜」选择映射模板</span>
+              <span class="modal-close" onclick="closeModal('bTplModal')">✕</span>
+            </div>
+            <div class="modal-body">
+              <div style="background: #FFF6E8; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #EF9F27; margin-bottom: 12px; line-height:1.6;">
+                ⚠️ 应用模板将覆盖当前映射关系（仅修改本页预览，点击<b style="font-weight:600">保存</b>后才会推送设备生效）
+              </div>
+              <div class="search-bar">
+                <span class="search-ic"><svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="flex-shrink:0;fill:#999;"><path d="M862.609 816.955L726.44 680.785l-0.059-0.056a358.907 358.907 0 0 0 56.43-91.927c18.824-44.507 28.369-91.767 28.369-140.467 0-48.701-9.545-95.96-28.369-140.467-18.176-42.973-44.19-81.56-77.319-114.689-33.13-33.129-71.717-59.144-114.69-77.32-44.507-18.825-91.767-28.37-140.467-28.37-48.701 0-95.96 9.545-140.467 28.37-42.973 18.176-81.56 44.19-114.689 77.32-33.13 33.129-59.144 71.717-77.32 114.689-18.825 44.507-28.37 91.767-28.37 140.467 0 48.7 9.545 95.96 28.37 140.467 18.176 42.974 44.19 81.561 77.32 114.69 33.129 33.129 71.717 59.144 114.689 77.319 44.507 18.824 91.767 28.369 140.467 28.369 48.7 0 95.96-9.545 140.467-28.369 32.78-13.864 62.997-32.303 90.197-54.968 0.063 0.064 0.122 0.132 0.186 0.195l136.169 136.17c6.25 6.25 14.438 9.373 22.628 9.373 8.188 0 16.38-3.125 22.627-9.372 12.496-12.496 12.496-32.758 0-45.254z m-412.274-69.466c-79.907 0-155.031-31.118-211.534-87.62-56.503-56.503-87.62-131.627-87.62-211.534s31.117-155.031 87.62-211.534c56.502-56.503 131.626-87.62 211.534-87.62s155.031 31.117 211.534 87.62c56.502 56.502 87.62 131.626 87.62 211.534s-31.118 155.031-87.62 211.534c-56.503 56.502-131.627 87.62-211.534 87.62z" fill="#999" p-id="6140"></path></svg></span>
+                <input id="bTplSearch" placeholder="请输入模版名称" onkeydown="if(event.key==='Enter'){event.preventDefault();onTplSearch('b')}">
+              </div>
+              <div id="bTplList"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" onclick="closeModal('bTplModal')">取消</button>
+              <button class="btn btn-primary" onclick="bApplyTpl()">应用</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 货道不一致警告弹窗：智能文案，列出实际差异 -->
+        <div class="center-mask" id="bMismatchModal">
+          <div class="center-dialog" style="max-width:320px">
+            <div class="status-icon warn">⚠</div>
+            <div class="center-dialog-title">模板与设备结构不一致</div>
+            <div class="center-dialog-msg" id="bMismatchMsg" style="line-height:1.7;text-align:left"></div>
+            <div class="center-dialog-actions">
+              <button class="btn btn-secondary" onclick="closeModal('bMismatchModal')">取消</button>
+              <button class="btn btn-primary" onclick="bForceApplyTpl()">仍要应用</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 清空映射二次确认 -->
+        <div class="center-mask" id="bClearConfirm">
+          <div class="center-dialog">
+            <div class="status-icon warn">⚠</div>
+            <div class="center-dialog-title">确认清空所有映射？</div>
+            <div class="center-dialog-msg" style="line-height:1.7">清空后所有货道物号置空，需逐格重新配置。<br>尚未保存的修改也会一起丢失。</div>
+            <div class="center-dialog-actions">
+              <button class="btn btn-secondary" onclick="closeModal('bClearConfirm')">取消</button>
+              <button class="btn btn-primary" onclick="bConfirmClear()">确认清空</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 推送进度（页面顶部横条 toast，由 JS 动态控制） -->
+
+      </div>
+
+    </div>
+
+    <!-- ============ 右侧需求说明 ============ -->
+        <div class="req-panel">
+  <div class="req-panel-hd">
+    <span class="req-panel-hd-title">需求说明 — 机器详情（货道映射 + 货道检测）</span>
+    <a class="req-download-btn" href="机器详情-需求说明.md" download title="下载详细需求说明 Markdown 文档">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
+      下载详细需求说明
+    </a>
+  </div>
+<div class="req-section">
+  <div class="req-h">一、目标</div>
+<p class="req-p">有屏机器详情补齐<strong>货道映射</strong>与<strong>货道检测</strong>两项能力，与无屏机器对齐；货道映射支持「选模板 → 本地预览 → 保存生效」，货道检测支持单个 / 整层 / 整柜并覆盖主柜副柜。</p>
+</div><div class="req-section">
+  <div class="req-h">二、货道映射</div>
+<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道映射</li><li><strong>柜体 Tab</strong>：主柜 / 副柜1… 各自独立矩阵；修改数量统一在工具栏右侧「已修改 N 项」展示，Tab 不显示角标、右上角不显示柜体总览</li><li><strong>矩阵展示（上软下物）</strong>：每格双行——上=软号（<b>灰色</b>，自动生成·只读，软号 = 起始编号 10 + 行×10 + 列）/ 下=物号（<b>橙色</b>，可编辑）；无 0~9 列号表头；左侧行头为上下两段「软」(灰)/「物」(橙)，与格子同构</li><li><strong>单格就地编辑</strong>：点击<b>物号</b>半格 → 变输入框（数字键盘），Enter/失焦确认、Esc 取消；输入 1~999；<b>确认后同层后续货道自动递增</b>（= 新值+1、+2…，只影响本层不跨层），递增格标修改态；物号 ≠ 默认物号时黄底（已修改）；空格点「+」可补填</li><li><strong>配置货道映射（模板应用）</strong>：工具栏「配置货道映射」打开模板选择弹窗（按当前柜体规格过滤模板，支持名称搜索、展开全部层预览）；点「应用」仅本地预览覆盖当前柜体映射，点「保存」后才推送生效；模板与柜体规格不一致时弹出警告，可取消或强制应用</li><li><strong>保存推送</strong>：点「保存」后才真正推送设备；<b>按柜体逐个推送</b>（主柜 → 副柜1 → …），顶部黄条 toast 展示逐柜进度，失败可重试；<b>保存后停留当前货道映射页，不自动返回</b>（用户手动点左上角返回）；「清空本柜」二次确认且仅清当前柜体</li></ul>
+</div><div class="req-section">
+  <div class="req-h">三、货道检测</div>
+<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道检测</li><li><strong>检测维度</strong>：单个货道（点格子）/ 整层（点「检测整层」）/ 整柜（点「检测整机」）</li><li><strong>柜体支持</strong>：主柜、副柜均支持；切换 Tab 后矩阵与状态按新柜体刷新</li><li><strong>状态流转</strong>：检测中（黄色闪烁）→ 正常（绿）/ 故障（红/橙）；检测中格子禁止重复触发</li><li><strong>结果展示</strong>：底部实时显示选中货道编号与状态；超时（&gt;15s 无回执）标记故障并 toast 提示</li></ul>
+</div><div class="req-section">
+  <div class="req-h">四、异常与权限</div>
+<ul class="req-ul"><li>设备离线时阻断推送 / 检测并 toast 提示</li><li>模板不匹配：列表全展示、不完全匹配项带提示、应用前二次确认、支持强制应用</li><li>权限点：lane_mapping:view / edit / push、lane_check:view / execute</li><li>进入 / 应用模板 / 编辑 / 清空 / 保存推送 / 执行检测 / 失败重试均需记录操作日志</li></ul>
+</div></div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 推送进度 toast（页面顶部横条，含重试按钮） -->
+<div class="push-toast" id="pushToast"></div>
+
+<script>
+/* ============ 模板数据（单柜体） ============ */
+// 映射模板与柜体一一对应：一个模板 = 一个柜体的映射，不再有"主柜+副柜"组合模板。
+// 编号规则与映射模板原型一致：软号 = 起始编号 + 行×10 + 列；物号 = 1 + 行×10 + 列（与每层货道数无关）
+function genTpl(name, mc, rows, cols, rule, startSw) {
+  const layers = [];
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < cols; c++) {
+      const sw = startSw + r * 10 + c;
+      let hw = 1 + r * 10 + c;
+      if (rule === '顺序递增') hw = sw + 9;
+      else if (rule === '自定义映射') hw = ((1 + r * 10 + c) * 7 % 99) + 1;
+      row.push({ sw, hw });
+    }
+    layers.push(row);
+  }
+  return { name, mc, rows, cols, lanes: rows * cols, rule, layers };
+}
+
+// 模板库：不同规格的单柜体模板（按设备柜体规格匹配选择）
+const A_TEMPLATES = [
+  genTpl('THJ-弹簧机10×10', '弹簧机', 10, 10, '1:1同号', 10),
+  genTpl('FPGT-弹簧机10×10', '弹簧机', 10, 10, '顺序递增', 10),
+  genTpl('THJ-弹簧机6×10', '弹簧机', 6, 10, '1:1同号', 10),
+  genTpl('FPGT-弹簧机6×10', '弹簧机', 6, 10, '自定义映射', 10),
+  genTpl('THJ-弹簧机8×10', '弹簧机', 8, 10, '1:1同号', 10),
+];
+
+const B_TEMPLATES = [
+  genTpl('THJ-弹簧机10×10', '弹簧机', 10, 10, '1:1同号', 10),
+  genTpl('FPGT-弹簧机10×10', '弹簧机', 10, 10, '顺序递增', 10),
+  genTpl('THJ-弹簧机6×10', '弹簧机', 6, 10, '1:1同号', 10),
+  genTpl('FPGT-弹簧机6×10', '弹簧机', 6, 10, '自定义映射', 10),
+  genTpl('THJ-弹簧机8×10', '弹簧机', 8, 10, '1:1同号', 10),
+];
+
+let aSelectedTpl = null;   // 预留（A 注册手机未挂载）
+let bSelectedTpl = null;   // 机器详情弹窗当前选中模板（单柜体）
+let aCurrentStep = 1;
+let aTplView = []; // 注册弹窗当前展示（含搜索过滤后的）模板（预留）
+let bTplView = []; // 售后弹窗当前展示（含搜索过滤后的）模板
+let pendingTpl = null; // 货道不一致时暂存的模板
+
+/* 设备柜体结构（可配置：主柜 + 0~N 副柜） */
+let deviceCabinets = [
+  { id: 'host', name: '主柜', rows: 10, cols: 10, lanes: 100 },
+  { id: 'sub1', name: '副柜1', rows: 6, cols: 10, lanes: 60 },
+];
+let deviceMatrix = {};   // 各柜体当前货道映射 {cabId: [[hw,...],...]}（草稿态）
+let savedMatrix = {};    // 各柜体已保存货道映射（源数据，未保存时不生效）
+let bCurCab = 'host';    // 机器详情当前查看的柜体 id
+let subSeq = 2;          // 新增副柜编号计数（sub1 已用）
+
+function initDeviceMatrix() {
+  deviceMatrix = {};
+  savedMatrix = {};
+  deviceCabinets.forEach(cab => {
+    const m = [];
+    let i = 1;
+    for (let r = 0; r < cab.rows; r++) {
+      const row = [];
+      for (let c = 0; c < cab.cols; c++) row.push(i++);
+      m.push(row);
+    }
+    deviceMatrix[cab.id] = m;
+    savedMatrix[cab.id] = m.map(row => row.slice());
+  });
+  bCurCab = deviceCabinets[0].id;
+}
+
+/* 把已保存的源数据恢复到草稿态（进入货道映射 / 未保存返回时使用） */
+function loadSavedMatrix() {
+  deviceMatrix = {};
+  for (const id in savedMatrix) {
+    deviceMatrix[id] = savedMatrix[id].map(row => row.slice());
+  }
+}
+
+/* 把当前草稿态提交为已保存源数据（保存推送成功后使用） */
+function commitMatrix() {
+  savedMatrix = {};
+  for (const id in deviceMatrix) {
+    savedMatrix[id] = deviceMatrix[id].map(row => row.slice());
+  }
+}
+
+/* ============ 通用 ============ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+/* ============ 模板渲染 ============ */
+function rowL(i){ return String.fromCharCode(65 + i); }
+let tplExpanded = new Set();
+const tplCabKey = (t, i) => t + '_' + i;
+function renderTplList(target, data) {
+  const el = document.getElementById(target);
+  if (!el) return; // 目标弹窗未挂载（如仅存根的注册流程）时跳过
+  if (target === 'aTplList') aTplView = data; else bTplView = data;
+  const curSel = target === 'aTplList' ? aSelectedTpl : bSelectedTpl;
+  // 空结果：显示"无匹配"占位
+  if (!data || data.length === 0) {
+    el.innerHTML = `
+      <div class="tpl-empty">
+        <div class="tpl-empty-ic">🔍</div>
+        <div class="tpl-empty-title">暂无匹配的模板</div>
+        <div class="tpl-empty-sub">当前柜体规格暂无可用模板，可<button class="tpl-empty-clear" onclick="closeModal('${target === 'aTplList' ? 'aTplModal' : 'bTplModal'}')">取消</button></div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = data.map((t, i) => {
+    const expanded = tplExpanded.has(tplCabKey(target, i));
+    // 单柜体模板：直接渲染模板自身的映射矩阵
+    const layers = t.layers;
+    const showRows = expanded ? layers.length : Math.min(layers.length, 3);
+    const hasMore = !expanded && layers.length > 3;
+    let matrixHtml = '<div class="mini-mx">';
+    for (let r = 0; r < showRows; r++) {
+      const row = layers[r];
+      matrixHtml += '<div class="mini-row">';
+      matrixHtml += '<div class="mini-rh">' + rowL(r) + '</div>';
+      for (let c = 0; c < row.length; c++) {
+        const cell = row[c];
+        const same = cell.sw === cell.hw;
+        matrixHtml += '<div class="mini-cell' + (same ? ' same' : '') + '"><span class="mc-sw">' + cell.sw + '</span><span class="mc-hw">' + cell.hw + '</span></div>';
+      }
+      matrixHtml += '</div>';
+    }
+    if (hasMore) {
+      const remaining = layers.length - 3;
+      matrixHtml += '<div class="mini-row expand-row" onclick="event.stopPropagation();toggleTplExpand(\'' + target + '\',' + i + ')"><div class="mini-rh">…</div><div class="mini-cell more-row">展开剩余 ' + remaining + ' 层</div></div>';
+    } else if (expanded && layers.length > 3) {
+      matrixHtml += '<div class="mini-row expand-row" onclick="event.stopPropagation();toggleTplExpand(\'' + target + '\',' + i + ')"><div class="mini-rh">…</div><div class="mini-cell more-row">收起</div></div>';
+    }
+    matrixHtml += '</div>';
+    // 模式标签
+    let tag, tagCls;
+    if (t.rule.indexOf('1:1') >= 0) { tag = '1:1 同号'; tagCls = 'tag-same'; }
+    else if (t.rule.indexOf('递增') >= 0) { tag = '顺序递增'; tagCls = 'tag-incr'; }
+    else { tag = '自定义映射'; tagCls = 'tag-custom'; }
+    const isSel = curSel === t ? ' selected' : '';
+    return `
+      <div class="tpl-card${isSel}" data-idx="${i}" onclick="selectTpl('${target}', ${i})">
+        <div class="tpl-card-top">
+          <div class="tpl-name">${t.name}</div>
+          <div class="tpl-type-tag">${t.mc}</div>
+        </div>
+        <div class="tpl-info">
+          <div class="tpl-stat">${t.rows}层×${t.cols}列 · <b>${t.lanes}</b> 货道</div>
+        </div>
+        <div class="tpl-map-box">
+          <div class="tpl-map-head">
+            <span class="map-tag ${tagCls}">${tag}</span>
+            <span class="map-tip">📊 映射分布（上=软号 / 下=物号）</span>
+          </div>
+          ${matrixHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function toggleTplExpand(target, i) {
+  const k = tplCabKey(target, i);
+  if (tplExpanded.has(k)) tplExpanded.delete(k);
+  else tplExpanded.add(k);
+  renderTplList(target, target === 'aTplList' ? aTplView : bTplView);
+}
+function selectTpl(target, idx) {
+  const data = target === 'aTplList' ? aTplView : bTplView;
+  const container = document.getElementById(target);
+  if (!container) return;
+  const cards = container.querySelectorAll('.tpl-card');
+  const isCurrentlySelected = cards[idx] && cards[idx].classList.contains('selected');
+  cards.forEach(el => el.classList.remove('selected'));
+  if (target === 'aTplList') {
+    if (isCurrentlySelected) aSelectedTpl = null;
+    else { cards[idx].classList.add('selected'); aSelectedTpl = data[idx]; }
+  } else {
+    if (isCurrentlySelected) bSelectedTpl = null;
+    else { cards[idx].classList.add('selected'); bSelectedTpl = data[idx]; }
+  }
+}
+
+/* 弹窗内模板名称模糊搜索 */
+function onTplSearch(which) {
+  const isA = which === 'a';
+  const input = document.getElementById(isA ? 'aTplSearch' : 'bTplSearch');
+  if (!input) return;
+  const kw = input.value.trim().toLowerCase();
+  const all = isA ? A_TEMPLATES : B_TEMPLATES;
+  const filtered = kw ? all.filter(t => t.name.toLowerCase().indexOf(kw) >= 0) : all;
+  renderTplList(isA ? 'aTplList' : 'bTplList', filtered.filter(t => matchTpl(t, cabById(bCurCab))));
+}
+
+/* 单柜体模板与目标柜体规格匹配（rows×cols 一致才算匹配） */
+function matchTpl(tpl, cab) {
+  if (!cab) return true;
+  return tpl.rows === cab.rows && tpl.cols === cab.cols;
+}
+function cabById(id) {
+  return deviceCabinets.find(c => c.id === id) || null;
+}
+
+function clearTplSearch(isA) {
+  const input = document.getElementById(isA ? 'aTplSearch' : 'bTplSearch');
+  if (!input) return;
+  input.value = '';
+  input.focus();
+  const all = isA ? A_TEMPLATES : B_TEMPLATES;
+  renderTplList(isA ? 'aTplList' : 'bTplList', all.filter(t => matchTpl(t, cabById(bCurCab))));
+}
+
+/* 打开模板弹窗：按当前柜体（bCurCab）维度渲染匹配模板 */
+function openTplForCab() {
+  const cab = cabById(bCurCab);
+  if (!cab) return;
+  bSelectedTpl = null;
+  const titleEl = document.getElementById('bTplModalTitle');
+  if (titleEl) titleEl.textContent = '为「' + cab.name + '」选择映射模板';
+  const searchEl = document.getElementById('bTplSearch');
+  if (searchEl) searchEl.value = '';
+  renderTplList('bTplList', B_TEMPLATES.filter(t => matchTpl(t, cab)));
+  openModal('bTplModal');
+}
+
+function bApplyTpl() {
+  if (!bSelectedTpl) { showToast('请先选择一个模板'); return; }
+  // 单柜体模板 vs 当前柜体规格：不一致时提示可强制应用
+  const cab = cabById(bCurCab);
+  if (!cab) return;
+  if (bSelectedTpl.rows !== cab.rows || bSelectedTpl.cols !== cab.cols) {
+    pendingTpl = bSelectedTpl;
+    document.getElementById('bMismatchMsg').innerHTML =
+      `模板「${bSelectedTpl.name}」规格 <b style="color:#EF9F27">${bSelectedTpl.rows}×${bSelectedTpl.cols}</b> 与当前柜体「${cab.name}」<b>${cab.rows}×${cab.cols}</b> 不一致，强制应用将按模板写入「${cab.name}」映射：`;
+    openModal('bMismatchModal');
+    return;
+  }
+  doApplyTpl(bSelectedTpl);
+}
+
+function bForceApplyTpl() {
+  closeModal('bMismatchModal');
+  if (pendingTpl) {
+    doApplyTpl(pendingTpl, true);
+    pendingTpl = null;
+  }
+}
+
+/* 单柜体模板应用到当前柜体（bCurCab）——主柜、副柜各自独立配置 */
+function doApplyTpl(tpl, force) {
+  const cab = cabById(bCurCab);
+  if (!cab) return;
+  const newMatrix = [];
+  for (let r = 0; r < cab.rows; r++) {
+    const row = [];
+    for (let c = 0; c < cab.cols; c++) {
+      row.push(tpl.layers[r][c].hw);
+    }
+    newMatrix.push(row);
+  }
+  deviceMatrix[cab.id] = newMatrix;
+  closeModal('bTplModal');
+  renderCabTabs();
+  renderMatrix(bCurCab);
+  showToast('已为「' + cab.name + '」应用模板：' + tpl.name + '（点保存后按柜体推送生效）');
+}
+
+/* ============ 手机A：注册流程 ============ */
+function aGoStep(s) {
+  [1,2,3].forEach(i => {
+    document.getElementById('aPage'+i).style.display = i === s ? 'block' : 'none';
+    document.getElementById('aBottom'+i).style.display = i === s ? 'block' : 'none';
+  });
+  document.getElementById('aNavBack').style.visibility = s === 1 ? 'hidden' : 'visible';
+  aCurrentStep = s;
+}
+function aBack() {
+  if (aCurrentStep > 1) aGoStep(aCurrentStep - 1);
+}
+
+/* 副柜（扩展柜）渲染（步骤2：仅展示预置副柜，货道数锁死不可改） */
+function renderSubCabinets() {
+  const el = document.getElementById('aSubList');
+  const subs = deviceCabinets.filter(c => c.role !== 'host' && c.id !== 'host');
+  if (subs.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:18px 4px;text-align:center;background:#fff;border-radius:10px">本设备暂无副柜（扩展柜）</div>';
+    return;
+  }
+  // 副柜规格图例按 rows/cols 估算（与主柜同样的"三线 + 两线"展示）
+  el.innerHTML = subs.map((c) => {
+    // 三线 / 两线 比例分配：默认 60% / 40%（与主柜的 80/20 不同，按副柜小容量做合理展示）
+    const three = Math.round(c.lanes * 0.6);
+    const two = c.lanes - three;
+    // 三线/两线抽一个示例秒数（按规格合理写死）
+    const threeSec = c.lanes >= 80 ? '5s' : '4s';
+    const twoSec = c.lanes >= 80 ? '2s' : '3s';
+    return `
+      <div class="cab-card">
+        <div class="cab-card-hd">
+          <div class="cab-card-title">${c.name}</div>
+          <div class="cab-card-config" onclick="showToast('${c.name}机型/规格配置（占位）')">配置</div>
+        </div>
+        <div class="cab-block-label">选择机型</div>
+        <div class="cab-machine-card">
+          <div class="cab-machine-img"></div>
+          <div class="cab-machine-name">弹簧机</div>
+        </div>
+        <div class="cab-block-label" style="margin-top:14px">货道配置</div>
+        <div class="cab-cfg-card">
+          <div class="cab-cfg-row">层列：<b>${c.rows} 层 × ${c.cols} 列</b></div>
+          <div class="cab-cfg-row">货道：<b>${c.lanes}</b></div>
+          <div class="cab-cfg-legend">
+            <span class="cab-legend-item"><span class="cab-legend-dot amber"></span>三线 · ${threeSec} · ${three}</span>
+            <span class="cab-legend-item"><span class="cab-legend-dot green"></span>两线 · ${twoSec} · ${two}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function aConfirmTpl() {
+  if (!aSelectedTpl) { showToast('请先选择一个模板'); return; }
+  closeModal('aTplModal');
+  renderATplPreview();
+  showToast('已选择模板：'+aSelectedTpl.name);
+}
+
+function aSkipTpl() {
+  aSelectedTpl = null;
+  closeModal('aTplModal');
+  renderATplPreview();
+}
+
+/* 步骤3 下方"已选/未选"预览：未选提示文案；已选展示模板信息 + 完整点阵（不折叠） */
+function renderATplPreview() {
+  const el = document.getElementById('aTplPreview');
+  if (!aSelectedTpl) {
+    el.innerHTML = '<div class="a-tpl-preview-empty">未选择模板<span style="color:#bbb"> · 注册后可在机器详情中重新配置</span></div>';
+    return;
+  }
+  const t = aSelectedTpl;
+  const total = t.cabinets.reduce((s, c) => s + c.lanes, 0);
+  // 每个柜体独立成块展示
+  let blocks = '';
+  t.cabinets.forEach((cab) => {
+    let tag, tagCls;
+    if (cab.rule.indexOf('1:1') >= 0) { tag = '1:1 同号'; tagCls = 'tag-same'; }
+    else if (cab.rule.indexOf('递增') >= 0) { tag = '顺序递增'; tagCls = 'tag-incr'; }
+    else { tag = '自定义映射'; tagCls = 'tag-custom'; }
+    let mx = '<div class="a-tpl-preview-mx">';
+    cab.layers.forEach((row, r) => {
+      mx += '<div class="mini-row">';
+      mx += '<div class="mini-rh">' + rowL(r) + '</div>';
+      row.forEach(cell => {
+        const same = cell.sw === cell.hw;
+        mx += '<div class="mini-cell' + (same ? ' same' : '') + '"><span class="mc-sw">' + cell.sw + '</span><span class="mc-hw">' + cell.hw + '</span></div>';
+      });
+      mx += '</div>';
+    });
+    mx += '</div>';
+    blocks += `
+      <div class="cab-block">
+        <div class="cab-block-hd">
+          <div class="cab-block-name">${cab.name}</div>
+          <div class="cab-block-role">${cab.role === 'host' ? '主柜' : '副柜'}</div>
+          <div class="cab-block-meta">${cab.rows}层×${cab.cols}列 · ${cab.lanes} 货道</div>
+        </div>
+        <div style="margin-bottom:6px"><span class="map-tag ${tagCls}" style="display:inline-block">${tag}</span></div>
+        ${mx}
+      </div>`;
+  });
+  el.innerHTML = `
+    <div class="a-tpl-preview-top">
+      <div class="a-tpl-preview-name">${t.name}</div>
+      <div class="a-tpl-preview-action" onclick="openModal('aTplModal')">更换 ›</div>
+    </div>
+    <div class="a-tpl-preview-meta">
+      <div>柜体结构：<b>${t.cabinets.length}</b> 个柜体（1 主柜 + ${t.cabinets.length - 1} 副柜） · 共 <b>${total}</b> 货道</div>
+    </div>
+    ${blocks}
+    <div class="a-tpl-preview-foot">每个柜体独立展示映射（主柜 + 各副柜）；上=软号 / 下=物号</div>
+  `;
+}
+
+/* 注册：关闭注册三步 → 跳到「操作成功」页（aPage4）→ 顶部黄条 toast 显示注册/推送进度 */
+function aRegister() {
+  // 1) 关闭注册三步流程
+  [1, 2, 3].forEach(i => {
+    document.getElementById('aPage' + i).style.display = 'none';
+    document.getElementById('aBottom' + i).style.display = 'none';
+  });
+  // 2) 进入 aPage4 操作成功页
+  document.getElementById('aPage4').style.display = 'block';
+  document.getElementById('aNavTitle').textContent = '操作成功';
+  document.getElementById('aNavBack').style.visibility = 'visible';
+  document.getElementById('aNavBack').onclick = aContinueRegister;  // 返回 = 重新绑定
+  // 3) 注册进度 toast（与 bSave 同套展示，语义改为「注册」）
+  showPushToast('progress', '正在注册设备…');
+  const subs = deviceCabinets.filter(c => c.role !== 'host');
+  const steps = ['✓ 设备已注册'];
+  subs.forEach((c, i) => {
+    setTimeout(() => {
+      const ok = Math.random() < 0.85;
+      if (ok) {
+        steps.push(`✓ ${c.name}已注册`);
+      } else {
+        steps.push(`✕ ${c.name}注册失败`);
+      }
+      const allDone = steps.length >= 1 + subs.length;
+      const allOk = steps.every(s => s.startsWith('✓'));
+      const failNum = steps.filter(s => s.startsWith('✕')).length;
+      if (allDone) {
+        if (allOk) {
+          showPushToast('success', `已注册 ${deviceCabinets.length} 个柜体`);
+        } else {
+          showPushToast('fail', `${failNum} 个柜体注册失败，点击重试`);
+        }
+      } else {
+        showPushToast('progress', '正在注册设备… ' + steps.join(' · '));
+      }
+    }, 600 + i * 350);
+  });
+  setTimeout(() => {
+    if (subs.length === 0) showPushToast('success', '设备已注册');
+  }, 500);
+}
+
+/* 「继续绑定」：隐藏成功页 → 回到注册流程第1步（重置） */
+function aContinueRegister() {
+  document.getElementById('aPage4').style.display = 'none';
+  document.getElementById('aNavTitle').textContent = '编号绑定';
+  document.getElementById('aNavBack').onclick = aBack;  // 恢复默认返回
+  aGoStep(1);
+}
+
+/* 「设备检测」：占位（业务页未提供，此处 toast 提示） */
+function aGoDeviceCheck() {
+  showToast('设备检测（占位）— 后续接设备自检/通信测试页');
+}
+
+/* ============ 手机B：货道映射修改 ============ */
+let pendingClearCab = null;
+function bGoPage2() {
+  document.getElementById('bPage1').style.display = 'none';
+  document.getElementById('bPage2').style.display = 'flex';
+  document.getElementById('bNavTitle').textContent = '货道映射';
+  document.getElementById('bNavBack').style.visibility = 'visible';
+  // 每次进入货道映射都从已保存的源数据恢复，避免上次未保存的草稿残留
+  loadSavedMatrix();
+  closeModal('bClearConfirm');
+  if (!deviceCabinets.find(c => c.id === bCurCab)) bCurCab = deviceCabinets[0].id;
+  renderCabTabs();
+  renderMatrix(bCurCab);
+}
+function bBack() {
+  if (document.getElementById('bPage2').style.display !== 'none') {
+    document.getElementById('bPage2').style.display = 'none';
+    document.getElementById('bPage1').style.display = 'block';
+    document.getElementById('bNavTitle').textContent = '机器详情';
+    document.getElementById('bNavBack').style.visibility = 'hidden';
+    // 返回机器详情时关闭所有弹窗并丢弃未保存的草稿
+    closeModal('bClearConfirm');
+  }
+}
+
+/* 柜体 Tab */
+function renderCabTabs() {
+  const el = document.getElementById('bCabTabs');
+  el.innerHTML = deviceCabinets.map(c => {
+    const isActive = c.id === bCurCab ? ' active' : '';
+    return `<div class="cab-tab${isActive}" onclick="bSwitchCab('${c.id}')">${c.name}</div>`;
+  }).join('');
+}
+function bSwitchCab(id) {
+  bCurCab = id;
+  renderCabTabs();
+  renderMatrix(id);
+}
+
+function renderMatrix(cabId) {
+  const cab = deviceCabinets.find(c => c.id === cabId);
+  const mat = deviceMatrix[cabId];
+  const m = document.getElementById('bMatrix');
+  const cols = cab.cols, rows = cab.rows;
+  // 行头：上下两段「软」(灰) /「物」(橙)
+  let rh = '';
+  for (let r = 0; r < rows; r++) {
+    rh += '<div class="ra"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
+  }
+  // 格子：上=软号（灰，自动生成只读）/ 下=物号（橙，点击=就地编辑）
+  let h = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v = mat[r][c];
+      const isEmpty = (v === '' || v === null || v === undefined);
+      const defHw = r * cols + c + 1;
+      const swNum = 10 + r * 10 + c; // 软号 = 起始编号(10) + 行×10 + 列，自动生成
+      const mod = !isEmpty && v !== defHw;
+      const cls = (isEmpty ? ' empty' : '') + (mod ? ' modified' : '');
+      h += `<div class="mx" data-r="${r}" data-c="${c}">`
+         +    `<div class="sw">${swNum}</div>`
+         +    `<div class="gw${cls}" onclick="bEditCell('${cabId}',${r},${c})">${isEmpty ? '' : v}</div>`
+         +  '</div>';
+    }
+  }
+  m.innerHTML = '<div class="lane-body"><div class="row-axis">' + rh + '</div><div class="cells">' + h + '</div></div>';
+  updateModifyStat();
+}
+
+function cabModifyCount(cabId) {
+  const cab = deviceCabinets.find(c => c.id === cabId);
+  const mat = deviceMatrix[cabId];
+  let cnt = 0;
+  for (let r = 0; r < cab.rows; r++) {
+    for (let c = 0; c < cab.cols; c++) {
+      const v = mat[r][c];
+      const defHw = r * cab.cols + c + 1;
+      if (v !== '' && v !== defHw) cnt++;
+    }
+  }
+  return cnt;
+}
+
+function updateModifyStat() {
+  document.getElementById('bModifyCount').textContent = cabModifyCount(bCurCab);
+  renderCabTabs();
+}
+
+/* ================= 单格就地编辑 =================
+   点击物号半格 → 变输入框；确认后该层后续货道自动递增（只影响本层，不跨层） */
+function bEditCell(cabId, r, c) {
+  const gw = document.querySelector('#bMatrix .mx[data-r="' + r + '"][data-c="' + c + '"] .gw');
+  if (!gw || gw.querySelector('input')) return;
+  const cur = deviceMatrix[cabId][r][c];
+  gw.classList.remove('empty', 'modified');
+  gw.classList.add('editing');
+  gw.innerHTML = `<input type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="999" value="${cur === '' ? '' : cur}">`;
+  const input = gw.querySelector('input');
+  input.focus();
+  setTimeout(() => { try { input.select(); } catch(e){} }, 30);
+  const finish = (revert) => {
+    if (revert) { renderMatrix(cabId); return; }
+    const raw = input.value.trim();
+    if (raw === '') {
+      deviceMatrix[cabId][r][c] = '';
+    } else {
+      const num = parseInt(raw, 10);
+      if (isNaN(num) || num < 1) { showToast('请输入 1~999 的物号'); input.focus(); return; }
+      deviceMatrix[cabId][r][c] = Math.min(num, 999);
+      // 同层后续货道自动递增：new(c+1)=n+1、new(c+2)=n+2 …（只影响本层）
+      const cab = deviceCabinets.find(x => x.id === cabId);
+      for (let c2 = c + 1; c2 < cab.cols; c2++) {
+        deviceMatrix[cabId][r][c2] = Math.min(deviceMatrix[cabId][r][c] + (c2 - c), 999);
+      }
+    }
+    renderMatrix(cabId);
+  };
+  input.addEventListener('blur', () => finish(false), { once: true });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(true); }
+  });
+}
+
+function bClearMapping() {
+  showToast('确认清空本柜映射？');
+  pendingClearCab = bCurCab;
+  openModal('bClearConfirm');
+}
+
+/* 清空映射二次确认 */
+function bConfirmClear() {
+  const cabId = pendingClearCab || bCurCab;
+  const cab = deviceCabinets.find(c => c.id === cabId);
+  for (let r = 0; r < cab.rows; r++) {
+    for (let c = 0; c < cab.cols; c++) deviceMatrix[cabId][r][c] = '';
+  }
+  closeModal('bClearConfirm');
+  renderMatrix(cabId);
+  updateModifyStat();
+  showToast('已清空「' + cab.name + '」映射，点击物号可逐格补填');
+}
+
+/* ============ 保存 → 推送 ============ */
+/* 保存：关闭模板弹窗 → 提交草稿 → 停留当前货道映射页（不自动回详情页）→ 按柜体逐个推送 */
+function bSave() {
+  // 关闭模板弹窗（如果在），并把当前草稿提交为已保存源数据
+  closeModal('bTplModal');
+  commitMatrix();
+  // 进度 toast：按柜体逐个推送
+  showPushToast('progress', '正在推送设备…');
+  const cabs = deviceCabinets;
+  const steps = [];
+  cabs.forEach((c, i) => {
+    setTimeout(() => {
+      const ok = Math.random() < 0.8;
+      if (ok) steps.push(`✓ ${c.name}已推送`);
+      else steps.push(`✕ ${c.name}推送失败`);
+      const allDone = steps.length === cabs.length;
+      const allOk = steps.every(s => s.startsWith('✓'));
+      const failNum = steps.filter(s => s.startsWith('✕')).length;
+      if (allDone) {
+        if (allOk) {
+          showPushToast('success', `已推送 ${cabs.length} 个柜体（主柜 + ${cabs.length - 1} 个副柜）`);
+        } else {
+          showPushToast('fail', `${failNum} 个柜体推送失败，点击重试`);
+        }
+      } else {
+        showPushToast('progress', '正在推送设备… ' + steps.join(' · '));
+      }
+    }, 500 + i * 400);
+  });
+}
+
+/* 推送进度 toast（顶部黄色横条，含状态图标） */
+let pushToastTimer = null;
+function showPushToast(type, text) {
+  const t = document.getElementById('pushToast');
+  if (!t) return;
+  // 内容：图标 + 文案 + (失败时) 重新推送按钮
+  const retryHtml = type === 'fail'
+    ? '<span class="push-toast-action" onclick="bReSave()">重新推送</span>'
+    : '';
+  const icon = type === 'progress' ? '⏳'
+              : type === 'success'  ? '✓'
+              : '⚠';
+  t.innerHTML = `<span class="push-toast-icon ${type}">${icon}</span><span class="push-toast-text">${text}</span>${retryHtml}`;
+  t.classList.remove('show', 'progress', 'success', 'fail');
+  void t.offsetWidth; // 强制重排重启动画
+  t.classList.add('show', type);
+  if (pushToastTimer) clearTimeout(pushToastTimer);
+  // 成功/失败 toast 停留更久：成功 2.5s，失败 6s（含重试按钮）
+  const hide = type === 'success' ? 2500 : (type === 'fail' ? 6000 : 60000);
+  pushToastTimer = setTimeout(() => {
+    t.classList.remove('show');
+  }, hide);
+}
+
+function bReSave() {
+  bSave();
+}
+
+/* ============ 初始化 ============ */
+initDeviceMatrix();
+renderMatrix(bCurCab);
+</script>
+</body>
+</html>
