@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>需求说明 — 映射模板配置（运维小程序）</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F5F5F7;color:#1f1f1f;font-family:-apple-system,'PingFang SC','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;line-height:1.75}
+.bar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #E5E5EA;padding:12px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar-title{font-size:15px;font-weight:700;color:#222;margin-right:auto}
+.bar-sub{font-size:12px;color:#999;font-weight:400;margin-left:8px}
+.bar a.btn{font-size:13px;color:#fff;background:#EF9F27;text-decoration:none;padding:7px 14px;border-radius:14px;font-weight:500}
+.bar a.btn.ghost{background:#fff;color:#EF9F27;border:1px solid #EF9F27}
+.bar a.btn:active{opacity:.8}
+.wrap{max-width:940px;margin:0 auto;padding:28px 24px 80px}
+.card{background:#fff;border-radius:12px;padding:28px 32px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+h1{font-size:24px;font-weight:700;margin:0 0 18px;padding-bottom:16px;border-bottom:2px solid #EF9F27}
+h2{font-size:18px;font-weight:700;color:#222;margin:34px 0 14px;padding-left:10px;border-left:4px solid #EF9F27}
+h3{font-size:15px;font-weight:700;color:#333;margin:24px 0 10px}
+p{margin:0 0 12px;font-size:14px;color:#3a3a3a}
+p.note{background:#FFF6E8;border-radius:8px;padding:10px 14px;font-size:13px;color:#8A5E14;border-left:3px solid #EF9F27}
+blockquote{margin:0 0 14px;padding:10px 14px;background:#F7F7F9;border-left:3px solid #D0D0D5;border-radius:0 8px 8px 0;color:#666;font-size:13px}
+ul{list-style:none;margin:0 0 14px;padding:0}
+li{font-size:14px;color:#3a3a3a;padding:7px 0 7px 18px;position:relative;border-bottom:1px solid #F0F0F2}
+li.lv1{padding-left:36px;color:#666;font-size:13px}
+li:last-child{border-bottom:none}
+li::before{content:'';position:absolute;left:4px;top:16px;width:5px;height:5px;border-radius:50%;background:#EF9F27}
+li.lv1::before{left:22px;background:#C9CDD2}
+ul ul li{border-bottom:none}
+strong{color:#111;font-weight:600}
+code{background:#FFF1DC;color:#B26A00;font-size:12.5px;padding:1px 6px;border-radius:4px;font-family:Menlo,Consolas,monospace}
+hr{border:none;border-top:1px solid #EDEDF0;margin:30px 0}
+.tbl-wrap{overflow-x:auto;margin:0 0 18px;border:1px solid #EAEAEE;border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px}
+th{background:#FFF8EC;color:#7A4E00;font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid #F0E2C6;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #F2F2F5;color:#3a3a3a;vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#FAFAFC}
+</style>
+</head>
+<body>
+<div class="bar">
+  <span class="bar-title">需求说明 — 映射模板配置<span class="bar-sub">运维小程序 · v2（2026-09-29）</span></span>
+  <a class="btn" href="map-template.html">← 返回原型</a>
+  <a class="btn ghost" href="#" id="dlMd">下载 Markdown</a>
+</div>
+<div class="wrap">
+  <div class="card">
+<h1>需求说明 — 映射模板配置</h1>
+<blockquote><strong>所属项目</strong>：运维小程序（售货机/储物柜运维管理小程序）</blockquote>
+<blockquote></blockquote>
+<blockquote>由原型内嵌需求说明导出（原型：<code>map-prototype/index.html</code>）</blockquote>
+<h2 id="版本修订记录">版本修订记录</h2>
+<div class="tbl-wrap"><table><thead><tr><th>版本</th><th>修订日期</th><th>状态</th><th>修订内容摘要</th></tr></thead><tbody><tr><td>v1（上次迭代）</td><td>2026-08-25</td><td>已定稿</td><td>① 模板改为<strong>按柜体维度</strong>（单柜体，无主/副柜组合）；② 机器类型去掉饮料机，仅弹簧机/格子机；③ 软/物号规则改为均按"行×10"步进（软号=起始编号+行×10+列，物号=1+行×10+列，<strong>与每层货道数无关</strong>）</td></tr><tr><td>v2（本次修改）</td><td>2026-09-29</td><td>本次</td><td>映射关系表<strong>形态改版</strong>：去列号头、每格改为上下两个独立矩形（软号只读/物号可编辑）、行头改「软/物」、选中只落物号；新增<strong>同层自动递增</strong>逻辑</td></tr></tbody></table></div>
+<blockquote>阅读约定：标记为 <strong>🆕 本次新增</strong> 的条目为 v2 新需求；标记为 <strong>🔧 本次调整</strong> 的条目为 v1 已有、v2 修改的需求；未标记的条目沿用 v1，本次未改动。</blockquote>
+<hr>
+<h2 id="一、功能概述">一、功能概述</h2>
+<p>将控制系统软件货道编号与硬件物理货道编号绑定，模板可复用以免逐台配置。</p>
+<ul><li class="lv0">模板按柜体维度维护：一个映射模板对应一个柜体，推送按柜体粒度下发。</li><li class="lv0">弹簧机/格子机按行×列（有"层"）。</li><li class="lv0">机器类型仅弹簧机 / 格子机二选一（默认弹簧机，已去掉饮料机）。</li></ul>
+<h2 id="二、列表页">二、列表页</h2>
+<ul><li class="lv0"><strong>模板卡片</strong>：名称、描述（选填）、类型标签（统一灰）、规格、货道总数、软/物号范围</li><li class="lv0"><strong>mini 矩阵</strong>：2D 矩阵展示软/物号（上下分排）；默认 3 行，超出折叠"展开剩余 N 层"，点击展开/收起</li><li class="lv0"><strong>映射模式</strong>：自动标注 1:1同号 / 顺序递增 / 自定义映射</li><li class="lv0"><strong>操作按钮</strong>：编辑/复制/删除（等宽），点击追加编辑页或弹确认框</li><li class="lv0"><strong>编辑流程</strong>：点编辑→右侧加编辑页（预填数据）→保存→返回列表</li><li class="lv0"><strong>复制流程</strong>：点复制→确认弹窗→"去编辑"→预填数据，名称加"副本"后缀→保存才建新模板</li><li class="lv0"><strong>删除流程</strong>：点删除→确认弹窗→确认后移除</li><li class="lv0"><strong>新增入口</strong>：底部"＋新增"→右侧加空表单（默认弹簧机，层/列为空）</li><li class="lv0"><strong>空状态</strong>：无模板时显示空状态引导</li></ul>
+<h2 id="三、新增/编辑页">三、新增/编辑页</h2>
+<ul><li class="lv0"><strong>设计原则</strong>：编辑页与新增页交互一致，仅标题改"编辑映射模板"并预填数据；按钮同为"取消+保存"</li><li class="lv0"><strong>基础信息</strong>：名称（必填）、描述（选填）、类型（弹簧机/格子机二选一，默认弹簧机）</li><li class="lv0"><strong>柜体维度</strong>：映射模板与柜体一一对应（单柜体），不涉及主/副柜组合；模板即单柜映射，推送时按柜体下发</li><li class="lv0"><strong>规格 — 弹簧/格子机</strong>：起始编号 10/11；层数(1~10)+列数（起始编号10→最多10列，11→最多9列），每层货道数可微调且同受该上限约束；<strong>软号 = 起始编号 + 行×10 + 列、物号 = 1 + 行×10 + 列（均与每层货道数无关，行×10 是硬规则）</strong>，如选10 → A行 软10~14/物1~5（5货道）、B行 软20~29/物11~20（10货道，A行不满不影响B行从 20/11 起算）；实时显示总数</li></ul>
+<h3 id="3.1 映射关系表 🔧 本次调整">3.1 映射关系表 🔧 本次调整</h3>
+<ul><li class="lv0"><strong>整体结构</strong>：每层一行；<strong>不使用顶部 0~9 列号头</strong>（列选入口随之移除）</li><li class="lv0"><strong>每格形态</strong>：每格是<strong>上下两个独立的圆角矩形，中间留缝</strong>（不是同一个盒子里的上下两半）</li><li class="lv1">上矩形 = <strong>软号</strong>：蓝字白底，按行×10 自动生成</li><li class="lv1">下矩形 = <strong>物号</strong>：橙字，可逐格编辑</li><li class="lv1">尺寸：软号矩形高 27px（字号 11px）、物号矩形高 28px（字号 13px），中间缝 5px</li><li class="lv0"><strong>软号只读</strong>：软号是纯文本，<strong>任何情况下都不可编辑、不跟随变色</strong>；批量操作与物号写入都只作用于物号</li><li class="lv0"><strong>行头</strong>：每层行头为<strong>上下两个米黄小矩形「软」(蓝字) /「物」(橙字)</strong>，不带字母，与格子同构同高；点行头批量选该层（toggle），按压反馈只落「物」</li><li class="lv0"><strong>选中态</strong>：<strong>高亮只落物号矩形</strong>（蓝边 + 浅蓝底），软号矩形保持白底不变</li><li class="lv0"><strong>1:1 同号</strong>：上下两个矩形<strong>都置灰</strong>（表达"软=物"，不可改）</li><li class="lv0"><strong>批量操作</strong>：选中单元格可「1:1同号」「+1」「-1」批量调物号；支持全选/清空（各按钮是否触发递增见 3.2）</li></ul>
+<h3 id="3.2 物号编辑">3.2 物号编辑</h3>
+<ul><li class="lv0"><strong>物号独立</strong>：每个单元格物号默认按 1+行×10 生成，可逐个编辑成自定义映射</li><li class="lv0">🆕 <strong>同层自动递增（本次新增）</strong>：</li><li class="lv1"><strong>逐格编辑</strong>：修改某一层某个货道的物号为 n 后，<strong>该层后续货道自动按 n+1、n+2… 递增</strong></li><li class="lv1"><strong>「+1 / -1」触发</strong>：对所有选中格 ±1，再以<strong>该层最靠后的选中格</strong>为基准，后续货道自动递增</li><li class="lv1"><strong>「1:1同号」不触发</strong>：仅把选中格设为对应软号，<strong>不带动同层后续货道</strong></li><li class="lv1">作用范围：<strong>只影响当前层</strong>，不跨层修改；前面的货道保持原值，其他层完全不受影响</li><li class="lv1">多批次/跨层选中时，<strong>各层各自以其最靠后的选中格为基准递增</strong>，互不影响</li><li class="lv1">递增结果不小于 0</li><li class="lv1">演示例 1（A 层 10 列，默认物号 1~10）：把第 3 格改为 7 → 该层变为 <code>1, 2, 7, 8, 9, 10, 11, 12, 13, 14</code>；B 层仍为 11~20 不变</li><li class="lv1">演示例 2（同上）：选中第 3 格点「+1」→ 该层变为 <code>1, 2, 4, 5, 6, 7, 8, 9, 10, 11</code></li><li class="lv1">演示例 3（同上）：整层选中点「-1」→ 该层变为 <code>0, 1, 2, 3, 4, 5, 6, 7, 8, 9</code>（后续无货道，结果即选中格各自 -1）</li></ul>
+<h3 id="3.3 保存与返回">3.3 保存与返回</h3>
+<ul><li class="lv0"><strong>保存校验</strong>：① 名称非空 ② 名称不重复 ③ 弹簧/格子机：层/列/每层货道数≥1</li><li class="lv0"><strong>返回</strong>：点返回或"取消"关闭编辑页（不保存）</li></ul>
+<hr>
+<h2 id="四、本次修改明细（2026-09-29 vs 上次迭代 2026-08-25）">四、本次修改明细（2026-09-29 vs 上次迭代 2026-08-25）</h2>
+<div class="tbl-wrap"><table><thead><tr><th>#</th><th>条目</th><th>上次迭代（v1）</th><th>本次修改（v2）</th><th>类型</th></tr></thead><tbody><tr><td>1</td><td>列号头</td><td>顶部有 0~9 列号头，可点列号选整列</td><td><strong>去掉列号头</strong>，列选入口一并移除</td><td>🔧 调整</td></tr><tr><td>2</td><td>每格形态</td><td>每层两行（上整行软号、下整行物号）</td><td>每层一行，每格为<strong>上下两个独立圆角矩形、中间 5px 缝</strong></td><td>🔧 调整</td></tr><tr><td>3</td><td>矩形高度</td><td>—</td><td>软号矩形 27px/11px 字、物号矩形 28px/13px 字（整体加高）</td><td>🆕 新增</td></tr><tr><td>4</td><td>行头</td><td>字母 A/B/C…，单个米黄格</td><td><strong>上下两个米黄小矩形「软」(蓝字)/「物」(橙字)</strong>，不带字母，与格子同构同高</td><td>🔧 调整</td></tr><tr><td>5</td><td>软号可编辑性</td><td>纯文本但视觉上不易区分</td><td>明确<strong>只读</strong>：不可编辑、点击/选中/按压均不变色</td><td>🔧 调整</td></tr><tr><td>6</td><td>选中高亮</td><td>落整个盒子（软号也被框进去）</td><td><strong>只落物号矩形</strong>（蓝边+浅蓝底），软号白底不动</td><td>🔧 调整</td></tr><tr><td>7</td><td>1:1 同号</td><td>整格置灰</td><td>上下<strong>两个矩形都置灰</strong></td><td>🔧 调整</td></tr><tr><td>8</td><td>改物号联动</td><td>只改当前格，后续货道不变</td><td>🆕 <strong>同层后续货道自动递增</strong>（n+1、n+2…），<strong>不跨层</strong></td><td>🆕 新增</td></tr><tr><td>9</td><td>批量「+1/-1」</td><td>只改选中格，不带动后续</td><td>🆕 对所有选中格 ±1 后，<strong>以该层最靠后选中格为基准，后续递增</strong></td><td>🆕 新增</td></tr><tr><td>10</td><td>批量「1:1同号」</td><td>只改选中格</td><td><strong>保持只改选中格，不触发递增</strong>（同 v1）</td><td>沿用 v1</td></tr></tbody></table></div>
+  </div>
+</div>
+<script type="text/plain" id="mdSrc">
+# 需求说明 — 映射模板配置
+
+> **所属项目**：运维小程序（售货机/储物柜运维管理小程序）
+>
+> 由原型内嵌需求说明导出（原型：`map-prototype/index.html`）
+
+## 版本修订记录
+
+| 版本 | 修订日期 | 状态 | 修订内容摘要 |
+|---|---|---|---|
+| v1（上次迭代） | 2026-08-25 | 已定稿 | ① 模板改为**按柜体维度**（单柜体，无主/副柜组合）；② 机器类型去掉饮料机，仅弹簧机/格子机；③ 软/物号规则改为均按"行×10"步进（软号=起始编号+行×10+列，物号=1+行×10+列，**与每层货道数无关**） |
+| v2（本次修改） | 2026-09-29 | 本次 | 映射关系表**形态改版**：去列号头、每格改为上下两个独立矩形（软号只读/物号可编辑）、行头改「软/物」、选中只落物号；新增**同层自动递增**逻辑 |
+
+> 阅读约定：标记为 **🆕 本次新增** 的条目为 v2 新需求；标记为 **🔧 本次调整** 的条目为 v1 已有、v2 修改的需求；未标记的条目沿用 v1，本次未改动。
+
+---
+
+## 一、功能概述
+
+将控制系统软件货道编号与硬件物理货道编号绑定，模板可复用以免逐台配置。
+
+- 模板按柜体维度维护：一个映射模板对应一个柜体，推送按柜体粒度下发。
+- 弹簧机/格子机按行×列（有"层"）。
+- 机器类型仅弹簧机 / 格子机二选一（默认弹簧机，已去掉饮料机）。
+
+## 二、列表页
+
+- **模板卡片**：名称、描述（选填）、类型标签（统一灰）、规格、货道总数、软/物号范围
+- **mini 矩阵**：2D 矩阵展示软/物号（上下分排）；默认 3 行，超出折叠"展开剩余 N 层"，点击展开/收起
+- **映射模式**：自动标注 1:1同号 / 顺序递增 / 自定义映射
+- **操作按钮**：编辑/复制/删除（等宽），点击追加编辑页或弹确认框
+- **编辑流程**：点编辑→右侧加编辑页（预填数据）→保存→返回列表
+- **复制流程**：点复制→确认弹窗→"去编辑"→预填数据，名称加"副本"后缀→保存才建新模板
+- **删除流程**：点删除→确认弹窗→确认后移除
+- **新增入口**：底部"＋新增"→右侧加空表单（默认弹簧机，层/列为空）
+- **空状态**：无模板时显示空状态引导
+
+## 三、新增/编辑页
+
+- **设计原则**：编辑页与新增页交互一致，仅标题改"编辑映射模板"并预填数据；按钮同为"取消+保存"
+- **基础信息**：名称（必填）、描述（选填）、类型（弹簧机/格子机二选一，默认弹簧机）
+- **柜体维度**：映射模板与柜体一一对应（单柜体），不涉及主/副柜组合；模板即单柜映射，推送时按柜体下发
+- **规格 — 弹簧/格子机**：起始编号 10/11；层数(1~10)+列数（起始编号10→最多10列，11→最多9列），每层货道数可微调且同受该上限约束；**软号 = 起始编号 + 行×10 + 列、物号 = 1 + 行×10 + 列（均与每层货道数无关，行×10 是硬规则）**，如选10 → A行 软10~14/物1~5（5货道）、B行 软20~29/物11~20（10货道，A行不满不影响B行从 20/11 起算）；实时显示总数
+
+### 3.1 映射关系表 🔧 本次调整
+
+- **整体结构**：每层一行；**不使用顶部 0~9 列号头**（列选入口随之移除）
+- **每格形态**：每格是**上下两个独立的圆角矩形，中间留缝**（不是同一个盒子里的上下两半）
+  - 上矩形 = **软号**：蓝字白底，按行×10 自动生成
+  - 下矩形 = **物号**：橙字，可逐格编辑
+  - 尺寸：软号矩形高 27px（字号 11px）、物号矩形高 28px（字号 13px），中间缝 5px
+- **软号只读**：软号是纯文本，**任何情况下都不可编辑、不跟随变色**；批量操作与物号写入都只作用于物号
+- **行头**：每层行头为**上下两个米黄小矩形「软」(蓝字) /「物」(橙字)**，不带字母，与格子同构同高；点行头批量选该层（toggle），按压反馈只落「物」
+- **选中态**：**高亮只落物号矩形**（蓝边 + 浅蓝底），软号矩形保持白底不变
+- **1:1 同号**：上下两个矩形**都置灰**（表达"软=物"，不可改）
+- **批量操作**：选中单元格可「1:1同号」「+1」「-1」批量调物号；支持全选/清空（各按钮是否触发递增见 3.2）
+
+### 3.2 物号编辑
+
+- **物号独立**：每个单元格物号默认按 1+行×10 生成，可逐个编辑成自定义映射
+- 🆕 **同层自动递增（本次新增）**：
+  - **逐格编辑**：修改某一层某个货道的物号为 n 后，**该层后续货道自动按 n+1、n+2… 递增**
+  - **「+1 / -1」触发**：对所有选中格 ±1，再以**该层最靠后的选中格**为基准，后续货道自动递增
+  - **「1:1同号」不触发**：仅把选中格设为对应软号，**不带动同层后续货道**
+  - 作用范围：**只影响当前层**，不跨层修改；前面的货道保持原值，其他层完全不受影响
+  - 多批次/跨层选中时，**各层各自以其最靠后的选中格为基准递增**，互不影响
+  - 递增结果不小于 0
+  - 演示例 1（A 层 10 列，默认物号 1~10）：把第 3 格改为 7 → 该层变为 `1, 2, 7, 8, 9, 10, 11, 12, 13, 14`；B 层仍为 11~20 不变
+  - 演示例 2（同上）：选中第 3 格点「+1」→ 该层变为 `1, 2, 4, 5, 6, 7, 8, 9, 10, 11`
+  - 演示例 3（同上）：整层选中点「-1」→ 该层变为 `0, 1, 2, 3, 4, 5, 6, 7, 8, 9`（后续无货道，结果即选中格各自 -1）
+
+### 3.3 保存与返回
+
+- **保存校验**：① 名称非空 ② 名称不重复 ③ 弹簧/格子机：层/列/每层货道数≥1
+- **返回**：点返回或"取消"关闭编辑页（不保存）
+
+---
+
+## 四、本次修改明细（2026-09-29 vs 上次迭代 2026-08-25）
+
+| # | 条目 | 上次迭代（v1） | 本次修改（v2） | 类型 |
+|---|---|---|---|---|
+| 1 | 列号头 | 顶部有 0~9 列号头，可点列号选整列 | **去掉列号头**，列选入口一并移除 | 🔧 调整 |
+| 2 | 每格形态 | 每层两行（上整行软号、下整行物号） | 每层一行，每格为**上下两个独立圆角矩形、中间 5px 缝** | 🔧 调整 |
+| 3 | 矩形高度 | — | 软号矩形 27px/11px 字、物号矩形 28px/13px 字（整体加高） | 🆕 新增 |
+| 4 | 行头 | 字母 A/B/C…，单个米黄格 | **上下两个米黄小矩形「软」(蓝字)/「物」(橙字)**，不带字母，与格子同构同高 | 🔧 调整 |
+| 5 | 软号可编辑性 | 纯文本但视觉上不易区分 | 明确**只读**：不可编辑、点击/选中/按压均不变色 | 🔧 调整 |
+| 6 | 选中高亮 | 落整个盒子（软号也被框进去） | **只落物号矩形**（蓝边+浅蓝底），软号白底不动 | 🔧 调整 |
+| 7 | 1:1 同号 | 整格置灰 | 上下**两个矩形都置灰** | 🔧 调整 |
+| 8 | 改物号联动 | 只改当前格，后续货道不变 | 🆕 **同层后续货道自动递增**（n+1、n+2…），**不跨层** | 🆕 新增 |
+| 9 | 批量「+1/-1」 | 只改选中格，不带动后续 | 🆕 对所有选中格 ±1 后，**以该层最靠后选中格为基准，后续递增** | 🆕 新增 |
+| 10 | 批量「1:1同号」 | 只改选中格 | **保持只改选中格，不触发递增**（同 v1） | 沿用 v1 |
+
+</script>
+<script>
+document.getElementById('dlMd').addEventListener('click', function (e) {
+  e.preventDefault();
+  var text = document.getElementById('mdSrc').textContent;
+  var blob = new Blob([text], {type: 'text/markdown;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '映射模板配置-需求说明.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);}, 1000);
+});
+</script>
+</body>
+</html>
