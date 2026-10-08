@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>货道管理（货道映射）— 海外 APP 原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+
+/* ===== 整体布局：左侧手机原型 + 右侧需求说明面板 ===== */
+.page-wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 24px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; }
+
+/* ===== 右侧需求说明面板 ===== */
+.req-panel { width: 560px; flex: 1 1 420px; max-width: 620px; min-width: 360px; background: #252525; border-radius: 12px; padding: 22px 24px; color: #ccc; align-self: flex-start; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.req-panel-hd { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.req-panel-hd-title { flex: 1; min-width: 0; line-height: 1.3; }
+.req-download-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; background: #EF9F27; color: #fff; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 14px; text-decoration: none; transition: opacity .15s, background .15s; }
+.req-download-btn:hover { opacity: .9; }
+.req-download-btn:active { background: #d18b1c; }
+.req-download-btn svg { width: 13px; height: 13px; fill: currentColor; }
+.req-section { background: #2c2c2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.req-section:last-child { margin-bottom: 0; }
+.req-h { font-size: 14px; font-weight: 700; color: #EF9F27; margin-bottom: 10px; }
+.req-h2 { font-size: 12.5px; font-weight: 600; color: #fff; margin: 12px 0 6px; }
+.req-p { font-size: 12.5px; line-height: 1.75; color: #bdbdbd; margin-bottom: 8px; }
+.req-p:last-child { margin-bottom: 0; }
+.req-ul { list-style: none; }
+.req-ul li { font-size: 12.5px; line-height: 1.8; color: #bdbdbd; padding-left: 14px; position: relative; }
+.req-ul li::before { content: '·'; position: absolute; left: 2px; color: #EF9F27; font-weight: 700; }
+.req-ul li b { color: #f0f0f0; font-weight: 600; }
+.req-note { font-size: 11.5px; color: #8f8f8f; line-height: 1.7; margin-top: 6px; }
+.req-tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+.req-tbl th, .req-tbl td { border: 1px solid #3a3a3a; padding: 6px 8px; text-align: left; color: #c4c4c4; line-height: 1.55; vertical-align: top; }
+.req-tbl th { background: #343434; color: #fff; font-weight: 600; }
+.req-tbl td b, .req-tbl th b { color: #f0f0f0; }
+.phone { width: 375px; height: 812px; background: #F2F2F7; border-radius: 36px; border: 10px solid #111; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+
+/* ===== 导航栏 ===== */
+.nav { height: 48px; background: #fff; display: flex; align-items: center; padding: 0 12px; flex-shrink: 0; }
+.nav-back { width: 64px; display: flex; align-items: center; gap: 10px; color: #111; }
+.nav-back svg { display: block; }
+.nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; color: #111; }
+.nav-extra { width: 64px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
+.nav-temp { font-size: 13px; font-weight: 500; color: #111; letter-spacing: -0.3px; }
+
+/* ===== Tab ===== */
+.tabs { height: 44px; background: #fff; display: flex; flex-shrink: 0; border-bottom: 1px solid #ececec; }
+.tab { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #666; position: relative; cursor: pointer; }
+.tab.active { color: #378ADD; font-weight: 600; }
+.tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 32px; height: 3px; border-radius: 2px; background: #378ADD; }
+
+/* ===== 柜体 Tab（主柜/副柜1） ===== */
+.cab-tabs { display: flex; background: #fff; border-bottom: 1px solid #ececec; flex-shrink: 0; }
+.cab-tab { padding: 9px 16px; font-size: 13px; color: #888; border-bottom: 2px solid transparent; cursor: pointer; }
+.cab-tab.active { color: #378ADD; font-weight: 600; border-bottom-color: #378ADD; }
+
+.page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ===== 矩阵区 ===== */
+.lane-scroll { flex: 1; overflow-y: auto; padding: 10px 10px 90px; }
+.lane-body { display: flex; gap: 4px; }
+/* 行头：上下两段「软」(蓝) /「物」(橙)，与格子上软下物一一对应 */
+.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+.ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.ra .seg.sw { background: #ECECEF; color: #8E8E93; }
+.ra .seg.gw { background: #E6F1FB; color: #378ADD; }
+.ra.active .seg.gw { outline: 1.5px solid #378ADD; outline-offset: -1.5px; }
+.cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: start; }
+/* 格子：上=软号（蓝，自动生成只读）/ 下=物号（橙，可改）；每半格 52rpx（26px） */
+.cell { border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; flex-shrink: 0; }
+.cell .sw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; background: #F2F2F7; }
+.cell .gw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #378ADD; background: #fff; border-top: 1px solid #F0F0F2; transition: background .12s; }
+.cell .gw.modified { background: #EAF3FB; }
+.cell .gw.cleared { background: #FAFAFA; border: 1px dashed #C8C8CC; border-top: 1px dashed #C8C8CC; color: transparent; }
+.cell .gw.sel { background: #E6F1FB; outline: 1.5px solid #378ADD; outline-offset: -1.5px; }
+.cell .gw.editing { padding: 0; background: #fff; outline: 1.5px solid #378ADD; outline-offset: -1.5px; }
+.cell .gw.editing input { width: 100%; height: 100%; border: none; outline: none; background: transparent; color: #378ADD; font-size: 12px; font-weight: 600; text-align: center; font-family: inherit; -webkit-appearance: none; -moz-appearance: textfield; }
+.cell .gw.editing input::-webkit-outer-spin-button, .cell .gw.editing input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.hint { margin-top: 12px; font-size: 11px; color: #999; line-height: 1.7; text-align: center; }
+
+/* ===== 批量操作条（固定在 Tab 下方常显） ===== */
+.mt-bar { flex-shrink: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; background: #fff; padding: 8px 10px; border-bottom: 1px solid #ececec; }
+.mt-btn { border: 1px solid #dcdce0; background: #fff; color: #444; font-size: 12px; padding: 6px 9px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.mt-btn.primary { background: #378ADD; border-color: #378ADD; color: #fff; font-weight: 600; }
+.mt-info { font-size: 11px; color: #888; margin-left: auto; white-space: nowrap; }
+.mt-info b { color: #378ADD; }
+
+/* ===== 底部保存条 ===== */
+.bottom-bar { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid #ececec; z-index: 10; }
+.btn-save { width: 100%; height: 44px; border: none; border-radius: 22px; background: #378ADD; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-save:active { opacity: .85; }
+
+/* ===== 货道检测占位 ===== */
+.check-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #b0b0b5; gap: 10px; padding-bottom: 80px; }
+.check-empty svg { opacity: .55; }
+.check-empty .ce-t { font-size: 14px; }
+
+/* ===== Toast ===== */
+.toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(17,17,17,.85); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 10px; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80%; text-align: center; }
+.toast.show { opacity: 1; }
+</style>
+<script id="reqMdSource" type="text/plain">
+# 货道管理（货道映射）需求说明 — 海外 APP
+
+> 版本：v1.2-APP
+> 日期：2026-09-29
+> 关联原型：`货道管理-app/index.html`（海外 APP 端 · 375×812）
+
+---
+
+## 一、页面定位
+
+货道管理是机器详情「货道映射」入口跳转的**独立页面**，面向运营/运维人员，在矩阵上完成货道软号、物号的查看与物号编辑，并支持主副柜切换、批量改号、保存推送。**本说明对应海外 APP 版本**（与小程序版货道管理共用同一套矩阵与交互逻辑；主要差异仅在顶部导航形态：APP 原生导航 + 设备温度 `-8℃`，无微信胶囊）。
+
+---
+
+## 二、页面结构
+
+```
+┌─────────────────────────┐
+│  <  ⌂   货道管理        -8℃ │  顶部导航：返回 + 主页、标题、右上角温度
+├──────────┬──────────────┤
+│ 货道映射  │  货道检测      │  Tab（蓝 #378ADD 为选中态）
+├──────────┬──────────────┤
+│   主柜    副柜1           │  柜体 Tab（蓝 #378ADD 为选中态）
+├──────────┴──────────────┤
+│ [全选][清空][1:1同号][+1][−1] 已选 N 个 │  批量操作条（固定置顶常显）
+├──────────┬──────────────┤
+│ 软 物     │ [软][物][软][物]... │  行轴（软/物）+ 货道矩阵
+│ 软 物     │  10 11 12 ...      │  主柜 8 层×10 列 / 副柜1 6 层×10 列
+│  ...      │  ...               │
+├──────────┴──────────────┤
+│  上=软号（自动生成）· 下=物号；      │  提示语
+│  点击物号可就地修改（同层后续递增）    │
+├─────────────────────────┤
+│        [  保  存  ]        │  底部固定保存按钮
+└─────────────────────────┘
+```
+
+### 2.1 顶部导航（APP 原生，区别于小程序胶囊）
+- 左侧「返回」图标 +「主页」图标，中间标题「货道管理」；**右上角显示设备温度**（例：`-8℃`）。
+- 与小程序版差异：小程序版右上角为微信胶囊（··· / ⊙），本 APP 版为原生导航 + 设备温度，无微信胶囊。
+
+### 2.2 功能 Tab
+- 两个 Tab：**货道映射**（默认选中）、**货道检测**。
+- 选中态：文字蓝 `#378ADD`、加粗，底部蓝条。
+- 货道检测 Tab 当前为**占位空态**（搜索图标 + 「货道检测」标题），具体内容待补充。
+
+### 2.3 柜体 Tab（位于功能 Tab 之下）
+- 位于「货道映射 / 货道检测」Tab 行**下方**，且**仅在货道映射页内显示**（货道检测页不显示）：**主柜**（默认选中）、**副柜1**。
+- 选中态：文字蓝 `#378ADD`、加粗，底部蓝条。
+- 每个柜体的软/物号数据**独立存储、互不影响**；切换柜体时**清空当前选中**（选中按柜体维度）。
+- 柜体 Tab 旁不显示货道数/修改角标（避免冗余，统计在批量条右侧）。
+
+### 2.4 批量操作条（固定置顶，常显）
+- 位于 Tab 下方、矩阵上方，五个按钮 + 已选计数：
+  - **全选**：选中当前柜体全部货道（主柜 80 个 / 副柜1 60 个）；再次点击取消全选（toggle）。
+  - **清空**：将**已选**货道的**物号值清空**（置为空，呈虚线空格态），并取消选中；未选中时 toast「请先选择货道」。
+  - **1:1同号**：将**已选**货道的物号恢复为默认物号（见 §四 编号规则），即与位置 1:1 同号。
+  - **+1 / −1**：将**已选**货道物号整体 +1 / −1（下限 1，不跨 0）；已清空（空值）的货道不参与 ±1。
+  - **已选 N 个**：实时显示当前选中数量。
+
+### 2.5 货道矩阵区
+- **行轴**：左侧行头 A~（主柜 8 行 A~H、副柜1 6 行 A~F），每个行头为上下两段米黄小矩形「软」(灰) / 「物」(橙)，点击行头 = 选中该整层。无货道的层不渲染行头与矩阵。
+- **矩阵**：主柜 8 层 × 10 列 = 80 货道；副柜1 6 层 × 10 列 = 60 货道。
+- 每格为上下两个独立圆角矩形（中间约 5px 缝）：
+  - **上 = 软号**（灰字 `#8E8E93`、灰底 `#F2F2F7`，自动生成、**只读**，无编辑入口）。
+  - **下 = 物号**（蓝字 `#378ADD`、白底，可编辑）。
+- **选中态**：仅物号半格高亮——蓝边 + 浅蓝底 `#E6F1FB`；软号半格永远白底/灰字不参与高亮。
+- **修改态**：物号 ≠ 默认物号时，物号半格黄底 `#FFF6E8`（仅视觉标记，不影响保存逻辑）。
+
+### 2.6 底部保存按钮
+- 大圆角蓝按钮「保存」，点击后校验并提示推送（见 §4.5）。
+
+---
+
+## 三、编号规则
+
+| 编号 | 公式 | 主柜（8×10） | 副柜1（6×10） | 说明 |
+| -- | -- | -- | -- | -- |
+| 软号 | `行×10 + 列 + 10` | 10 ~ 89 | 10 ~ 69 | 厂测模板默认规则，逐列递增，**自动生成、只读** |
+| 物号（默认） | `行×10 + 列 + 1` | 1 ~ 80 | 1 ~ 60 | **从 1 开始递增**，可逐格编辑 |
+
+- 行号从 0 起（A 层 = 行 0），列号 0~9；公式与柜体无关，按各柜层数取值范围不同。
+- 示例：主柜 A 层软号 10~19、物号 1~10，H 层软号 80~89、物号 71~80；副柜1 F 层软号 60~69、物号 51~60。
+- 软号在任何货道映射类原型中均不可编辑，仅展示。
+- 各柜体物号修改数据独立存储，切柜后各自保留。
+
+---
+
+## 四、交互规则
+
+### 4.1 选中货道（批量前提）
+| 操作 | 行为 |
+| -- | -- |
+| 点击软号半格 | 选中/取消该货道（批量途径，软号本身不编辑） |
+| 点击行头 | 选中/取消整层（点行头「物」段只高亮物段，软段不变色） |
+| 点击「全选」 | 全选当前柜体全部货道（再点取消） |
+| 点击「清空」 | 将已选货道物号**值清空**（虚线空格态）并取消选中 |
+
+### 4.2 单格编辑物号（就地编辑）
+- 点击**物号半格** → 该半格变为数字输入框（唤起数字键盘）。
+- 确认：按下 `Enter` 或输入框失焦 → 取值生效。
+- 取消：按下 `Esc` → 还原，不落值。
+- 校验：仅允许 `1~999` 正整数；非法（空 / 非数字 / <1）时 toast「请输入 1~999 的物号」且**不落值**，输入框保持聚焦。
+- 上限：超过 999 截断为 999。
+
+### 4.3 同层自动递增（改一处，本层后续跟随）
+- 某货道物号改值为 `n` 后，该层其**右侧后续货道**（同层、列号更大）物号自动变为 `n+1`、`n+2` …（仅影响本层，不跨层）。
+- 递增后的格子同样标记为修改态（黄底）。
+- 示例：A 层第 3 格改 7 → 整层变为 `1, 2, 7, 8, 9 … 14`；B 层默认不变；改最后一格只动自身。
+
+### 4.4 批量修改
+| 按钮 | 行为 | 前置条件 | 提示 |
+| -- | -- | -- | -- |
+| 1:1同号 | 将已选物号恢复为默认物号（行×10+列+1），清空格一并恢复 | 至少选中 1 个 | 「已将 N 个货道恢复为默认物号（从 1 递增）」 |
+| +1 | 已选物号 +1（空值格跳过） | 至少选中 1 个且含非空值 | 「已对 N 个货道 +1」 |
+| −1 | 已选物号 −1（下限 1，空值格跳过） | 至少选中 1 个且含非空值 | 「已对 N 个货道 −1」 |
+| 清空 | 将已选货道物号值清空并取消选中 | 至少选中 1 个 | 「已清空 N 个货道的物号」 |
+
+- 未选中任何货道时，清空 / 1:1同号 / +1 / −1 点击 toast「请先选择货道」并阻断。
+- 已选货道全部为空值时，+1 / −1 点击 toast「已选货道物号为空，请先填写物号」并阻断。
+- 对已清空的货道可重新就地编辑填值（填 n 后同层右侧自动递增），也可用 1:1同号 恢复默认物号。
+
+### 4.5 保存与推送
+- 点击「保存」：
+  - 按柜体粒度推送：统计**全部柜体**物号 ≠ 默认物号的格子数（修改项数）。
+  - 提示：「已保存并推送 2 个柜体（修改 N 处）」。
+- 原型阶段保存为本地确认，不真正下发设备；真实推送需校验设备在线（离线提示「设备离线，请稍后重试」），遵循既有推送进度/失败重试约定（按柜体依次回执）。
+
+---
+
+## 五、状态与视觉规范
+
+| 元素 | 颜色 / 样式 |
+| -- | -- |
+| 主色 / 选中 Tab / 主要按钮 / 物号字 | 蓝 `#378ADD` |
+| 软号字 | 灰 `#8E8E93` |
+| 软号底 / 页面背景 | 灰 `#F2F2F7` |
+| 物号底（未改） | 白 `#fff` |
+| 选中物号半格 | 浅蓝底 `#E6F1FB` + 蓝边 |
+| 修改态物号半格 | 黄底 `#FFF6E8` |
+| 已清空物号半格 | 浅灰底 `#FAFAFA` + 灰虚线边框（空值态） |
+| 行头「软/物」矩形 | 米黄底小矩形（软灰字 / 物橙字） |
+| 画框 | 375×812 逻辑像素 |
+
+---
+
+## 六、待确认 / 待补充
+
+1. **货道检测 Tab 内容**：当前仅占位空态，需业务侧提供检测交互（单个/整层/整柜、状态着色、结果展示）。
+2. **保存推送流程**：是否沿用既有「推送进度 toast + 失败重试」；离线/权限边界是否复用机器详情现有约定。
+3. **副柜数量**：当前 1 个副柜1（6×10=60）；如实际设备有副柜2+，Tab 横向扩展即可，规则同副柜1。
+4. **APP 与小程序差异**：仅顶部导航形态不同（APP 原生 + 设备温度 `-8℃` / 小程序微信胶囊）；矩阵与交互逻辑一致。
+
+---
+
+## 七、验收标准
+
+- [ ] 顶部导航为 APP 原生：返回 + 主页图标、标题「货道管理」、右上角温度 `-8℃`（无微信胶囊）。
+- [ ] 柜体 Tab 位于功能 Tab 之下（仅货道映射页内显示），主柜/副柜1 默认主柜；点击可切换，选中态蓝字蓝条。
+- [ ] 主柜矩阵 8×10（软号 10~89、物号 1~80），副柜1 矩阵 6×10（软号 10~69、物号 1~60）。
+- [ ] 各柜体物号修改数据独立；切柜后选中清空（已选计数归 0）。
+- [ ] 软号灰字只读，无编辑入口；物号蓝字可编辑。
+- [ ] 点击物号半格可就地编辑，Enter/失焦确认、Esc 取消，1~999 校验非法不落值。
+- [ ] 改某格物号后，同层右侧后续货道自动 +1 递增，仅影响本层不跨柜。
+- [ ] 点击软号半格 / 行头可选中货道，选中仅高亮物号半格（蓝边浅蓝底），软号不变色。
+- [ ] 清空：将已选货道物号值清空（虚线空格态）并取消选中；空值格不参与 ±1，可重新编辑填值或 1:1同号 恢复。
+- [ ] 物号 ≠ 默认时黄底标记修改态。
+- [ ] 点击保存提示「已保存并推送 2 个柜体（修改 N 处）」。
+- [ ] 货道检测 Tab 占位空态正常展示。
+
+</script>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="phone">
+
+  <!-- 导航栏 -->
+  <div class="nav">
+    <div class="nav-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-7 8 7" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="nav-title">货道管理</div>
+    <div class="nav-extra">
+      <div class="nav-temp">-8℃</div>
+    </div>
+  </div>
+
+  <!-- Tab -->
+  <div class="tabs">
+    <div class="tab active" id="tabMap" onclick="switchTab('map')">货道映射</div>
+    <div class="tab" id="tabCheck" onclick="switchTab('check')">货道检测</div>
+  </div>
+
+  <!-- 页面：货道映射 -->
+  <div class="page" id="pageMap">
+    <!-- 柜体 Tab（货道映射内，Tab 行之下） -->
+    <div class="cab-tabs" id="cabTabs"></div>
+
+    <!-- 批量操作条（固定置顶常显） -->
+    <div class="mt-bar" id="mtBar">
+      <button class="mt-btn" onclick="selectAll()">全选</button>
+      <button class="mt-btn" onclick="clearLanes()">清空</button>
+      <button class="mt-btn primary" onclick="apply1to1()">1:1同号</button>
+      <button class="mt-btn" onclick="applyOffset(1)">+1</button>
+      <button class="mt-btn" onclick="applyOffset(-1)">−1</button>
+      <span class="mt-info">已选 <b id="selCount">0</b> 个</span>
+    </div>
+
+    <div class="lane-scroll">
+      <div class="lane-body">
+        <div class="row-axis" id="rowAxis"></div>
+        <div class="cells" id="cells"></div>
+      </div>
+      <div class="hint">上=软号（自动生成）· 下=物号；点击物号可就地修改（同层后续货道自动递增），点击软号或行头选中后可批量操作</div>
+    </div>
+
+    <!-- 保存条 -->
+    <div class="bottom-bar">
+      <button class="btn-save" onclick="saveMapping()">保存</button>
+    </div>
+  </div>
+
+  <!-- 页面：货道检测（占位） -->
+  <div class="page" id="pageCheck" style="display:none">
+    <div class="check-empty">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#b0b0b5" stroke-width="1.6"/><path d="M16.5 16.5L21 21" stroke="#b0b0b5" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="ce-t">货道检测</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ================= 数据 =================
+   柜体：主柜 8 层 × 10 列 = 80 货道；副柜1 6 层 × 10 列 = 60 货道（各柜体数据独立）
+   软号 = 行×10 + 列 + 10（厂测模板默认规则：从 10 起逐列递增，自动生成、只读）
+   物号 = 行×10 + 列 + 1（默认规则：从 1 起递增，可逐格编辑）；示例：主柜 H5 物号已改为 60（修改态） */
+const CABINETS = [
+  { id: 'host', name: '主柜', rows: 8, cols: 10 },
+  { id: 'sub1', name: '副柜1', rows: 6, cols: 10 },
+];
+const COLS = 10;
+let curCab = 0; // 当前柜体下标
+const cabData = CABINETS.map((cab) => {
+  const sw = [], hw = [];
+  for (let r = 0; r < cab.rows; r++) {
+    const sRow = [], hRow = [];
+    for (let c = 0; c < cab.cols; c++) { sRow.push(r * COLS + c + 10); hRow.push(r * COLS + c + 1); }
+    sw.push(sRow); hw.push(hRow);
+  }
+  return { sw, hw };
+});
+cabData[0].hw[7][4] = 60; // 主柜 H5 = 60（示例：已修改）
+const defaultHw = (r, c) => r * COLS + c + 1;
+const curCabCfg = () => CABINETS[curCab];
+const curSw = () => cabData[curCab].sw;
+const curHw = () => cabData[curCab].hw;
+
+let selected = new Set(); // "r,c"（仅当前柜体内；切柜清空）
+
+/* ================= 柜体 Tab ================= */
+function renderCabTabs() {
+  const el = document.getElementById('cabTabs');
+  el.innerHTML = CABINETS.map((c, i) =>
+    '<div class="cab-tab' + (i === curCab ? ' active' : '') + '" onclick="switchCab(' + i + ')">' + c.name + '</div>'
+  ).join('');
+}
+
+function switchCab(i) {
+  if (i === curCab) return;
+  curCab = i;
+  selected = new Set(); // 切柜清空选中（选中按柜体维度）
+  renderCabTabs();
+  renderAxis();
+  renderCells();
+}
+
+/* ================= 渲染 ================= */
+function renderAxis() {
+  const cab = curCabCfg();
+  const rowAxis = document.getElementById('rowAxis');
+  let rh = '';
+  for (let r = 0; r < cab.rows; r++) {
+    // 行头上下两段：软(灰) / 物(蓝)，点行头选整层；无货道的层不渲染
+    rh += '<div class="ra" id="ra' + r + '" onclick="selectRow(' + r + ')">'
+       +    '<div class="seg sw">软</div><div class="seg gw">物</div>'
+       +  '</div>';
+  }
+  rowAxis.innerHTML = rh;
+}
+
+function renderCells() {
+  const cab = curCabCfg();
+  const sw = curSw(), hw = curHw();
+  const el = document.getElementById('cells');
+  let h = '';
+  for (let r = 0; r < cab.rows; r++) {
+    for (let c = 0; c < cab.cols; c++) {
+      const st = hw[r][c] == null ? ' cleared' : (hw[r][c] !== defaultHw(r, c) ? ' modified' : '');
+      const sel = selected.has(r + ',' + c) ? ' sel' : '';
+      // 上=软号（只读，点击=选中该货道）；下=物号（点击=就地编辑）
+      h += '<div class="cell" data-r="' + r + '" data-c="' + c + '">'
+         +    '<div class="sw" onclick="toggleCell(' + r + ',' + c + ')">' + sw[r][c] + '</div>'
+         +    '<div class="gw' + st + sel + '" onclick="editCell(' + r + ',' + c + ')">' + (hw[r][c] == null ? '' : hw[r][c]) + '</div>'
+         +  '</div>';
+    }
+  }
+  el.innerHTML = h;
+  // 行头选中态
+  for (let r = 0; r < cab.rows; r++) {
+    const ra = document.getElementById('ra' + r);
+    if (ra) ra.classList.toggle('active', isRowFull(r));
+  }
+  document.getElementById('selCount').textContent = selected.size;
+}
+
+function isRowFull(r) {
+  const cols = curCabCfg().cols;
+  for (let c = 0; c < cols; c++) if (!selected.has(r + ',' + c)) return false;
+  return true;
+}
+
+/* ================= 选中 ================= */
+function toggleCell(r, c) {
+  const k = r + ',' + c;
+  if (selected.has(k)) selected.delete(k); else selected.add(k);
+  renderCells();
+}
+
+/* ================= 单格就地编辑 =================
+   点击物号半格 → 变输入框；确认后该层后续货道自动递增（只影响本层，不跨层） */
+function editCell(r, c) {
+  const gw = document.querySelector('#cells .cell[data-r="' + r + '"][data-c="' + c + '"] .gw');
+  if (!gw || gw.querySelector('input')) return;
+  const hw = curHw();
+  const cur = hw[r][c];
+  gw.classList.add('editing');
+  gw.innerHTML = '<input type="number" inputmode="numeric" pattern="[0-9]*" value="' + (cur == null ? '' : cur) + '">';
+  const input = gw.querySelector('input');
+  input.focus();
+  setTimeout(() => { try { input.select(); } catch (e) {} }, 30);
+  const finish = (revert) => {
+    if (revert) { renderCells(); return; }
+    const raw = input.value.trim();
+    const n = parseInt(raw, 10);
+    if (raw === '' || isNaN(n) || n < 1) { showToast('请输入 1~999 的物号'); input.focus(); return; }
+    hw[r][c] = Math.min(n, 999);
+    // 该层后续货道自动递增：new(c+1)=n+1, new(c+2)=n+2 …（只影响本层）
+    for (let c2 = c + 1; c2 < curCabCfg().cols; c2++) hw[r][c2] = Math.min(hw[r][c] + (c2 - c), 999);
+    renderCells();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(true); }
+  });
+  input.addEventListener('blur', () => finish(false), { once: true });
+}
+
+function selectRow(r) {
+  const cab = curCabCfg();
+  if (r >= cab.rows) return; // 无货道的层
+  if (isRowFull(r)) { for (let c = 0; c < cab.cols; c++) selected.delete(r + ',' + c); }
+  else { for (let c = 0; c < cab.cols; c++) selected.add(r + ',' + c); }
+  renderCells();
+}
+
+function selectAll() {
+  const cab = curCabCfg();
+  if (selected.size === cab.rows * cab.cols) selected = new Set();
+  else { selected = new Set(); for (let r = 0; r < cab.rows; r++) for (let c = 0; c < cab.cols; c++) selected.add(r + ',' + c); }
+  renderCells();
+}
+
+function clearLanes() {
+  if (selected.size === 0) { showToast('请先选择货道'); return; }
+  const hw = curHw();
+  let cnt = 0;
+  for (const k of selected) { const [r, c] = k.split(',').map(Number); hw[r][c] = null; cnt++; }
+  selected = new Set(); // 清空值后同时取消选中
+  renderCells();
+  showToast('已清空 ' + cnt + ' 个货道的物号');
+}
+
+/* ================= 批量修改 ================= */
+function apply1to1() {
+  if (selected.size === 0) { showToast('请先选择货道'); return; }
+  const hw = curHw();
+  let cnt = 0;
+  for (const k of selected) { const [r, c] = k.split(',').map(Number); hw[r][c] = defaultHw(r, c); cnt++; }
+  renderCells();
+  showToast('已将 ' + cnt + ' 个货道恢复为默认物号（从 1 递增）');
+}
+
+function applyOffset(d) {
+  if (selected.size === 0) { showToast('请先选择货道'); return; }
+  const hw = curHw();
+  let cnt = 0;
+  for (const k of selected) {
+    const [r, c] = k.split(',').map(Number);
+    if (hw[r][c] == null) continue; // 已清空的货道不参与 ±1
+    hw[r][c] = Math.max(1, hw[r][c] + d); cnt++;
+  }
+  if (cnt === 0) { showToast('已选货道物号为空，请先填写物号'); return; }
+  renderCells();
+  showToast('已对 ' + cnt + ' 个货道 ' + (d > 0 ? '+1' : '−1'));
+}
+
+/* ================= 保存 =================
+   按柜体粒度推送：统计全部柜体修改处数，一次推送 N 个柜体 */
+function saveMapping() {
+  let modCount = 0;
+  for (let i = 0; i < cabData.length; i++) {
+    const { hw } = cabData[i], cab = CABINETS[i];
+    for (let r = 0; r < cab.rows; r++) for (let c = 0; c < cab.cols; c++) if (hw[r][c] !== defaultHw(r, c)) modCount++;
+  }
+  showToast('已保存并推送 ' + cabData.length + ' 个柜体（修改 ' + modCount + ' 处）');
+}
+
+/* ================= Tab ================= */
+function switchTab(t) {
+  document.getElementById('tabMap').classList.toggle('active', t === 'map');
+  document.getElementById('tabCheck').classList.toggle('active', t === 'check');
+  document.getElementById('pageMap').style.display = t === 'map' ? 'flex' : 'none';
+  document.getElementById('pageCheck').style.display = t === 'check' ? 'flex' : 'none';
+  if (t !== 'map') { clearSel(); }
+}
+
+/* ================= Toast ================= */
+let toastTimer = null;
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* ================= 初始化 ================= */
+renderCabTabs();
+renderAxis();
+renderCells();
+</script>
+
+  <!-- ============ 右侧需求说明面板 ============ -->
+  <div class="req-panel">
+    <div class="req-panel-hd">
+      <span class="req-panel-hd-title">需求说明 — 货道管理（货道映射）</span>
+      <a class="req-download-btn" href="#" onclick="downloadReqMd();return false;" title="下载需求说明 Markdown 文档">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
+        下载需求说明
+      </a>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">一、页面定位</div>
+      <p class="req-p">货道管理是机器详情「货道映射」入口跳转的<strong style="color:#f0f0f0">独立页面</strong>，面向运营/运维人员，在矩阵上完成货道软号、物号的查看与物号编辑，并支持主副柜切换、批量改号、保存推送。</p>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">二、页面结构</div>
+      <ul class="req-ul">
+        <li><b>顶部导航</b>：返回 + 主页图标、标题「货道管理」、右上角温度（例：-8℃）</li>
+        <li><b>Tab 区</b>：货道映射（默认选中，蓝 #378ADD）/ 货道检测（占位空态）</li>
+        <li><b>柜体 Tab（位于 Tab 区之下）</b>：主柜（默认选中）/ 副柜1，蓝 #378ADD 选中态，<b>仅在货道映射页内显示</b>（货道检测页不显示）；各柜数据独立，<b>切柜清空选中</b>；Tab 旁不显示数量/修改角标</li>
+        <li><b>批量操作条（固定置顶常显）</b>：全选 / 清空 / 1:1同号 / +1 / −1 / 已选 N 个</li>
+        <li><b>货道矩阵</b>：行轴行头 A~（上下两段「软/物」，点行头选整层）；每格上下两个独立矩形——上=软号（灰、只读）、下=物号（蓝、可编辑）；主柜 8 层×10 列 = 80 货道，副柜1 6 层×10 列 = 60 货道</li>
+        <li><b>底部保存</b>：大圆角蓝按钮「保存」</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">三、编号规则</div>
+      <table class="req-tbl">
+        <tr><th>编号</th><th>公式</th><th>主柜 8×10</th><th>副柜1 6×10</th><th>说明</th></tr>
+        <tr><td>软号</td><td>行×10 + 列 + 10</td><td>10 ~ 89</td><td>10 ~ 69</td><td>厂测默认，自动生成、<b>只读</b></td></tr>
+        <tr><td>物号（默认）</td><td>行×10 + 列 + 1</td><td>1 ~ 80</td><td>1 ~ 60</td><td><b>从 1 递增</b>，可逐格编辑</td></tr>
+      </table>
+      <p class="req-note">行号从 0 起（A 层 = 行 0），列号 0~9；公式与柜体无关，按各柜层数取值范围不同。示例：主柜 A 层软 10~19/物 1~10、H 层软 80~89/物 71~80；副柜1 F 层软 60~69/物 51~60。各柜物号修改数据独立，切柜后各自保留。软号在任何货道映射类原型中均不可编辑。</p>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">四、交互规则</div>
+      <div class="req-h2">4.1 选中货道（批量前提）</div>
+      <ul class="req-ul">
+        <li>点击软号半格 → 选中/取消该货道（软号本身不编辑）</li>
+        <li>点击行头 → 选中/取消整层；点「物」段只高亮物段，软段不变色</li>
+        <li>点击「全选」全选当前柜体全部货道（再点取消）；「清空」将已选货道<b>物号值清空</b>（虚线空格态）并取消选中</li>
+        <li><b>切柜清空</b>：切换主柜/副柜1 时清空当前选中（选中按柜体维度）</li>
+      </ul>
+      <div class="req-h2">4.2 单格编辑物号</div>
+      <ul class="req-ul">
+        <li>点物号半格 → 就地输入框；Enter / 失焦确认，Esc 取消</li>
+        <li>校验：仅 1~999 正整数；非法（空/非数字/&lt;1）toast「请输入 1~999 的物号」且不落值</li>
+        <li>上限 999</li>
+      </ul>
+      <div class="req-h2">4.3 同层自动递增</div>
+      <ul class="req-ul">
+        <li>某货道改值为 n → 同层右侧后续货道自动 n+1、n+2…（仅影响本层，不跨层）</li>
+        <li>递增格同标修改态（黄底）</li>
+      </ul>
+      <div class="req-h2">4.4 批量修改</div>
+      <ul class="req-ul">
+        <li><b>清空</b>：将<b>已选</b>货道的<b>物号值清空</b>（虚线空格态）并取消选中；未选中时 toast「请先选择货道」</li>
+        <li><b>1:1同号</b>：已选物号恢复为默认（行×10+列+1），清空格一并恢复</li>
+        <li><b>+1 / −1</b>：已选物号整体 ±1（下限 1）；<b>空值格跳过</b>，全部为空时 toast「已选货道物号为空，请先填写物号」</li>
+        <li>未选中时点击 清空/1:1同号/+1/−1 → toast「请先选择货道」并阻断</li>
+        <li>空值格可重新就地编辑填值（填 n 后同层右侧自动递增），或用 1:1同号 恢复默认</li>
+      </ul>
+      <div class="req-h2">4.5 保存与推送</div>
+      <ul class="req-ul">
+        <li>点保存 → 按<b>柜体粒度</b>推送：统计全部柜体物号≠默认的格子数 → 提示「已保存并推送 2 个柜体（修改 N 处）」</li>
+        <li>原型阶段为本地确认；真实推送需校验设备在线（离线提示「设备离线，请稍后重试」），复用既有推送进度/失败重试约定（按柜体依次回执）</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">五、状态与视觉规范</div>
+      <table class="req-tbl">
+        <tr><th>元素</th><th>颜色 / 样式</th></tr>
+        <tr><td>主色 / 选中 Tab / 主要按钮 / 物号字</td><td>蓝 #378ADD</td></tr>
+        <tr><td>软号字 / 软号底 / 页面背景</td><td>灰 #8E8E93 / #F2F2F7</td></tr>
+        <tr><td>物号底（未改）</td><td>白 #fff</td></tr>
+        <tr><td>选中物号半格</td><td>浅蓝底 #E6F1FB + 蓝边</td></tr>
+        <tr><td>修改态物号半格</td><td>黄底 #FFF6E8</td></tr>
+        <tr><td>已清空物号半格</td><td>浅灰底 #FAFAFA + 灰虚线边框（空值态）</td></tr>
+        <tr><td>行头「软/物」矩形</td><td>米黄底小矩形（软灰 / 物橙）</td></tr>
+        <tr><td>画框</td><td>375×812 逻辑像素</td></tr>
+      </table>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">六、待确认 / 待补充</div>
+      <ul class="req-ul">
+        <li><b>货道检测 Tab</b>：当前仅占位空态，待业务侧提供检测交互（单个/整层/整柜、状态着色、结果展示）</li>
+        <li><b>保存推送流程</b>：是否沿用既有「推送进度 toast + 失败重试」；离线/权限边界是否复用机器详情约定</li>
+        <li><b>副柜数量</b>：当前 1 个副柜1（6×10=60）；如实际设备有副柜2+，Tab 横向扩展即可，规则同副柜1</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">七、验收标准</div>
+      <ul class="req-ul">
+        <li>柜体 Tab 位于功能 Tab 之下（仅货道映射页内显示），主柜/副柜1 可切换，默认主柜，选中蓝字蓝条</li>
+        <li>主柜矩阵 8×10（软 10~89 / 物 1~80），副柜1 矩阵 6×10（软 10~69 / 物 1~60）</li>
+        <li>各柜物号修改数据独立；切柜后选中清空（已选计数归 0）</li>
+        <li>软号灰字只读、物号蓝字可编辑</li>
+        <li>点物号半格就地编辑，Enter/失焦确认、Esc 取消，1~999 校验非法不落值</li>
+        <li>改某格后同层右侧后续自动 +1 递增，仅影响本层不跨柜</li>
+        <li>点软号/行头可选中，选中仅高亮物号半格，软号不变色</li>
+        <li>清空：已选货道物号值清空（虚线空格态）并取消选中；空值格不参与 ±1，可重新编辑填值或 1:1同号 恢复</li>
+        <li>物号≠默认时黄底标记修改态</li>
+        <li>保存提示「已保存并推送 2 个柜体（修改 N 处）」</li>
+        <li>货道检测 Tab 占位空态正常</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- end page-wrapper -->
+<script>
+function downloadReqMd(){
+  var src = document.getElementById('reqMdSource');
+  var text = src ? src.textContent : "";
+  var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = '货道管理-APP需求说明.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
