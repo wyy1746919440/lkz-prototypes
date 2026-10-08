@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>机器详情（货道合并）— 交互原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #1e1e1e; color: #eee; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif; }
+body { min-height: 100vh; padding: 0; }
+
+.master-layout { display: block; width: 100%; max-width: 1600px; margin: 0 auto; padding: 24px 16px; box-sizing: border-box; }
+.page-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 16px; padding: 0 8px; }
+.page-wrapper { display: flex; gap: 24px; padding: 0 8px; align-items: flex-start; flex-wrap: nowrap; }
+.phone-group { display: flex; gap: 24px; flex-wrap: nowrap; overflow-x: auto; min-width: 0; flex-shrink: 1; padding-bottom: 8px; }
+.phone-group::-webkit-scrollbar { height: 8px; }
+.phone-group::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 4px; }
+
+/* ====== 手机画框 (iPhone 16 Pro 尺寸) ====== */
+.phone { width: 375px; min-width: 375px; background: #F2F2F7; height: 812px; position: relative; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.4); border-radius: 48px; flex-shrink: 0; display: flex; flex-direction: column; }
+.phone-label { position: absolute; top: -22px; left: 0; font-size: 12px; color: #888; font-weight: 500; }
+
+.status { background: #fff; padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #222; flex-shrink: 0; }
+.status-icons { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+.status-icons .ic { width: 16px; height: 11px; background: #222; border-radius: 2px; }
+.nav { background: #fff; padding: 8px 16px 12px; display: flex; align-items: center; justify-content: space-between; position: relative; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; }
+.nav-back { font-size: 18px; color: #222; cursor: pointer; padding: 4px 8px; }
+.nav-title { font-size: 16px; font-weight: 600; color: #222; position: absolute; left: 50%; transform: translateX(-50%); }
+.nav-right { font-size: 14px; color: #EF9F27; cursor: pointer; padding: 4px 8px; }
+
+.scroll { flex: 1; overflow-y: auto; padding: 12px 16px 90px; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { width: 0; }
+
+/* 按钮 */
+.btn-primary { width: 100%; height: 48px; background: #EF9F27; color: #fff; border: none; border-radius: 24px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-primary:disabled { background: #FFE8C2; cursor: not-allowed; }
+.btn-secondary { width: 100%; height: 48px; background: #fff; color: #222; border: 1px solid #E5E5E5; border-radius: 24px; font-size: 16px; font-weight: 500; cursor: pointer; }
+.btn-text { background: transparent; color: #EF9F27; border: none; font-size: 14px; cursor: pointer; padding: 6px 12px; }
+
+.bottom-bar { padding: 16px; background: #fff; position: absolute; left: 0; right: 0; bottom: 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
+.bottom-bar .btn { width: 100%; }
+.bb-row { display: flex; gap: 12px; }
+.bb-row .btn { flex: 1; }
+.bb-half { flex: 1; }
+
+/* 机器详情页 */
+.detail-header { background: #fff; padding: 16px; display: flex; gap: 12px; align-items: center; }
+.detail-img { width: 56px; height: 70px; background: linear-gradient(180deg, #ddd 0%, #fff 30%, #fff 60%, #ddd 100%); border-radius: 6px; position: relative; flex-shrink: 0; overflow: hidden; }
+.detail-img::before { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 24px; background: repeating-linear-gradient(0deg, #EF9F27 0px, #EF9F27 4px, transparent 4px, transparent 8px); opacity: 0.7; border-radius: 2px; }
+.detail-img::after { content: 'PUSH'; position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 8px; color: #fff; background: #EF9F27; padding: 2px 0; }
+.detail-info { flex: 1; }
+.detail-serial { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.detail-line { font-size: 12px; color: #888; line-height: 1.7; }
+.detail-line .val { color: #222; }
+
+.feat-section { background: #fff; margin-top: 12px; padding: 16px 0 8px; }
+.feat-title { padding: 0 16px 12px; font-size: 15px; font-weight: 600; color: #222; }
+.feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 8px; }
+.feat-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; cursor: pointer; border-radius: 8px; }
+.feat-item:hover { background: #f8f8f8; }
+.feat-icon { width: 32px; height: 32px; background: #FFF6E8; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #EF9F27; }
+.feat-label { font-size: 11px; color: #222; text-align: center; }
+
+/* 货道合并矩阵（复用货道映射矩阵视觉） */
+.matrix-wrap { padding: 12px; flex: 1; overflow: auto; }
+.matrix-hint { font-size: 11px; color: #888; margin-bottom: 8px; padding: 0 4px; line-height: 1.6; }
+.matrix-hint b { color: #EF9F27; font-weight: 600; }
+.matrix { display: grid; grid-template-columns: 26px repeat(10, 1fr); gap: 3px; background: #fff; border-radius: 12px; padding: 10px; font-size: 11px; }
+.m-head { font-weight: 600; color: #888; text-align: center; padding: 5px 0; font-size: 11px; }
+.m-head.x { color: #EF9F27; }
+.m-head.y { color: #EF9F27; }
+.m-cell { background: #F5F5F7; border-radius: 4px; padding: 6px 0; text-align: center; color: #222; font-size: 11px; cursor: pointer; position: relative; transition: background .15s, box-shadow .15s; }
+.m-cell:active { background: #E8E8EA; }
+.m-cell.empty { background: transparent; cursor: default; }
+.m-cell.empty::after { content: '+'; color: #d0d0d0; font-size: 14px; font-weight: 400; }
+/* 选中态（合并选择中） */
+.m-cell.picking { box-shadow: 0 0 0 2px #EF9F27 inset; background: #FFF6E8; color: #EF9F27; font-weight: 600; }
+/* 已合并态（绿色系，与映射的"修改黄"区分） */
+.m-cell.merged { background: #E5F7EE; color: #2BA471; font-weight: 600; }
+.m-cell.merged::after { content: attr(data-cnt); position: absolute; top: 1px; right: 2px; font-size: 8px; font-weight: 700; color: #fff; background: #2BA471; border-radius: 4px; padding: 0 3px; line-height: 11px; font-family: monospace; }
+.m-cell.merged.picking { box-shadow: 0 0 0 2px #EF9F27 inset; }
+/* 拆组候选态（取消合并模式点选已合并组） */
+.m-cell.unmerge-tgt { box-shadow: 0 0 0 2px #F55252 inset; background: #FFEBEB; color: #F55252; font-weight: 600; }
+.m-axis { display: flex; align-items: center; justify-content: center; color: #EF9F27; font-weight: 600; font-size: 12px; }
+
+.matrix-toolbar { display: flex; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; align-items: center; }
+.mt-btn { padding: 6px 12px; font-size: 12px; background: #fff; border: 1px solid #EF9F27; color: #EF9F27; border-radius: 16px; cursor: pointer; transition: all .15s; }
+.mt-btn.on { background: #EF9F27; color: #fff; }
+.mt-btn.ghost { border-color: #bbb; color: #666; }
+.mt-stat { font-size: 11px; color: #888; margin-left: auto; }
+.mt-stat b { color: #2BA471; font-weight: 600; }
+
+/* 柜体 Tab */
+.cab-tabs { display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; padding: 0 8px; overflow-x: auto; flex-shrink: 0; }
+.cab-tabs::-webkit-scrollbar { display: none; }
+.cab-tabs-wrap { position: relative; display: flex; align-items: stretch; background: #fff; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+.cab-tabs-wrap .cab-tabs { flex: 1; border-bottom: none; }
+.cab-tabs-right { display: flex; align-items: center; font-size: 11px; color: #888; padding: 0 12px 0 8px; flex-shrink: 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+.cab-tab { padding: 12px 14px; font-size: 13px; color: #888; white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
+.cab-tab.active { color: #EF9F27; font-weight: 600; border-bottom-color: #EF9F27; }
+
+/* 居中弹窗 */
+.center-mask { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: center; justify-content: center; }
+.center-mask.show { display: flex; }
+.center-dialog { background: #fff; border-radius: 16px; padding: 24px; width: 80%; max-width: 320px; text-align: center; }
+.center-dialog-title { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 8px; }
+.center-dialog-msg { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 20px; text-align: left; }
+.center-dialog-actions { display: flex; gap: 12px; }
+.center-dialog-actions .btn { flex: 1; height: 40px; font-size: 14px; border-radius: 20px; }
+.status-icon { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; }
+.status-icon.warn { background: #EF9F27; font-size: 30px; }
+.status-icon.success { background: #5DCAA5; }
+
+/* 合并详情行 */
+.mg-list { margin-top: 10px; background: #F5F5F7; border-radius: 8px; padding: 10px 12px; }
+.mg-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #666; padding: 5px 0; }
+.mg-row + .mg-row { border-top: 1px dashed #e5e5e5; }
+.mg-row b { color: #222; font-weight: 600; }
+
+/* 需求说明面板 */
+.req-panel { width: 580px; flex-shrink: 0; background: #252525; border-radius: 12px; padding: 24px 24px; color: #ccc; word-wrap: break-word; overflow-wrap: break-word; align-self: flex-start; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; line-height: 1.7; }
+.req-panel-hd { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.req-panel-hd-title { flex: 1; min-width: 0; }
+.req-download-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; background: #EF9F27; color: #fff; font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 14px; text-decoration: none; transition: opacity .15s, background .15s; }
+.req-download-btn:hover { opacity: 0.9; }
+.req-download-btn:active { background: #d18b1c; }
+.req-download-btn svg { width: 12px; height: 12px; fill: currentColor; }
+.req-section { background: #2c2c2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.req-section:last-child { margin-bottom: 0; }
+.req-h { font-size: 14px; font-weight: 600; color: #EF9F27; margin-bottom: 10px; padding-left: 8px; border-left: 3px solid #EF9F27; }
+.req-p { font-size: 13px; color: #b0b0b0; line-height: 1.9; margin-bottom: 8px; }
+.req-p:last-child { margin-bottom: 0; }
+.req-p strong { color: #fff; font-weight: 600; }
+.req-ul { list-style: none; padding: 0; }
+.req-ul li { font-size: 13px; color: #b0b0b0; line-height: 1.7; padding: 8px 0 8px 18px; border-bottom: 1px dashed #3a3a3a; position: relative; }
+.req-ul li:last-child { border-bottom: none; }
+.req-ul li::before { content: ''; position: absolute; left: 4px; top: 16px; width: 6px; height: 6px; background: #EF9F27; border-radius: 50%; }
+.req-ul li strong { color: #fff; font-weight: 600; margin-right: 4px; }
+
+/* toast */
+.toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* 推送进度 toast */
+.push-toast { position: fixed; left: 50%; top: 16px; transform: translate(-50%, -8px); display: flex; align-items: center; gap: 8px; background: #FFF6E8; color: #222; padding: 10px 14px; border-radius: 20px; font-size: 13px; box-shadow: 0 6px 24px rgba(0,0,0,.18); border: 1px solid #FFE8C2; z-index: 9500; max-width: 90vw; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+.push-toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.push-toast-icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+.push-toast-icon.progress { background: #EF9F27; color: #fff; animation: spin 1.2s linear infinite; }
+.push-toast-icon.success { background: #2dc26b; color: #fff; }
+.push-toast-icon.fail { background: #F55252; color: #fff; }
+.push-toast-text { flex: 1; }
+.push-toast-action { color: #EF9F27; padding: 2px 10px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.push-toast-action:active { background: #FFE8C2; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="master-layout">
+  <div class="page-title">机器详情（货道合并）— 交互原型</div>
+  <div class="page-wrapper">
+
+    <div class="phone-group">
+
+      <!-- ============ 手机C：机器详情 → 货道合并流程 ============ -->
+      <div class="phone">
+        <div class="phone-label">C · 机器详情 → 货道合并</div>
+        <div class="status"><span>9:41</span><span class="status-icons"><span class="ic"></span>5G📶🔋</span></div>
+        <div class="nav">
+          <span class="nav-back" id="cNavBack" onclick="cBack()" style="visibility:hidden">‹</span>
+          <span class="nav-title" id="cNavTitle">机器详情</span>
+          <span class="nav-right" style="visibility:hidden">···</span>
+        </div>
+
+        <!-- 详情页 -->
+        <div class="scroll" id="cPage1">
+          <div class="detail-header">
+            <div class="detail-img"></div>
+            <div class="detail-info">
+              <div class="detail-serial">📶 FPGT-THJ-8024970007</div>
+              <div class="detail-line">编号状态：<span class="val">已注册</span></div>
+              <div class="detail-line">支付码：<span class="val">——</span></div>
+            </div>
+          </div>
+          <div class="feat-section">
+            <div class="feat-title">全部功能</div>
+            <div class="feat-grid">
+              <div class="feat-item">
+                <div class="feat-icon">⊟</div>
+                <div class="feat-label">货道映射</div>
+              </div>
+              <div class="feat-item" onclick="cGoPage2()">
+                <div class="feat-icon" style="background:#E5F7EE;color:#2BA471">⧉</div>
+                <div class="feat-label">货道合并</div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-icon">⊙</div>
+                <div class="feat-label">货道检测</div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-icon">↑</div>
+                <div class="feat-label">固件升级</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 货道合并矩阵页 -->
+        <div id="cPage2" style="display:none;flex:1;flex-direction:column">
+          <div class="cab-tabs" id="cCabTabs"></div>
+          <div class="matrix-toolbar">
+            <button class="mt-btn" id="cMergeBtn" onclick="toggleMergeMode()">合并货道</button>
+            <button class="mt-btn ghost" id="cUnmergeBtn" onclick="toggleUnmergeMode()">取消合并</button>
+            <span class="mt-stat">已合并 <b id="cMergeCount">0</b> 组</span>
+          </div>
+          <div class="matrix-wrap">
+            <div class="matrix-hint" id="cHint">💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。</div>
+            <div class="matrix" id="cMatrix"></div>
+          </div>
+          <div class="bottom-bar">
+            <div class="bb-row" id="cSaveRow">
+              <button class="btn btn-primary" id="cSaveBtn" onclick="cSave()">保存</button>
+            </div>
+            <div class="bb-row" id="cPickRow" style="display:none">
+              <button class="btn btn-secondary bb-half" id="cCancelBtn" onclick="cancelPick()">取消</button>
+              <button class="btn btn-primary bb-half" id="cPickBtn" onclick="cSave()">合并所选 (0)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 合并确认弹窗 -->
+        <div class="center-mask" id="cMergeConfirm">
+          <div class="center-dialog">
+            <div class="status-icon warn">⧉</div>
+            <div class="center-dialog-title">确认合并所选货道？</div>
+            <div class="center-dialog-msg" id="cMergeMsg"></div>
+            <div class="center-dialog-actions">
+              <button class="btn btn-secondary" onclick="closeModal('cMergeConfirm')">取消</button>
+              <button class="btn btn-primary" onclick="doMerge()">确认合并</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 合并组详情弹窗 -->
+        <div class="center-mask" id="cGroupDetail">
+          <div class="center-dialog">
+            <div class="status-icon success" style="background:#2BA471;font-size:22px">⧉</div>
+            <div class="center-dialog-title" id="cGroupTitle">合并组 #1</div>
+            <div class="center-dialog-msg" id="cGroupMsg"></div>
+            <div class="center-dialog-actions">
+              <button class="btn btn-secondary" onclick="closeModal('cGroupDetail')">关闭</button>
+              <button class="btn btn-primary" style="background:#F55252" onclick="askUnmerge()">取消合并</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 拆组二次确认 -->
+        <div class="center-mask" id="cUnmergeConfirm">
+          <div class="center-dialog">
+            <div class="status-icon warn">⚠</div>
+            <div class="center-dialog-title">确认取消合并？</div>
+            <div class="center-dialog-msg" style="line-height:1.7" id="cUnmergeMsg">拆分后所选货道恢复为独立货道，<br>各自使用原物号，尚未保存的修改也会丢失。</div>
+            <div class="center-dialog-actions">
+              <button class="btn btn-secondary" onclick="closeModal('cUnmergeConfirm')">取消</button>
+              <button class="btn btn-primary" onclick="doUnmerge()">确认拆分</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============ 右侧需求说明 ============ -->
+    <div class="req-panel">
+      <div class="req-panel-hd">
+        <span class="req-panel-hd-title">需求说明 — 机器详情（货道合并）</span>
+        <a class="req-download-btn" href="机器详情-货道合并-需求说明.md" download title="下载详细需求说明 Markdown 文档">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
+          下载详细需求说明
+        </a>
+      </div>
+      <div class="req-section">
+        <div class="req-h">一、目标</div>
+        <p class="req-p">机器详情补齐<strong>货道合并</strong>能力：支持将同柜体多个货道<strong>两两合并</strong>（默认保留奇数物号、统一库存），满足大容量商品陈列与多货道同时出货的场景；交互延续「货道映射」的矩阵操作语言，<strong>仅覆盖合并 / 拆分两个动作</strong>，不扩散到库存、模板等其他功能。</p>
+      </div>
+      <div class="req-section">
+        <div class="req-h">二、货道合并</div>
+        <ul class="req-ul">
+          <li><strong>入口</strong>：机器详情 → 全部功能 → 货道合并（绿色 ⧉ 图标区分于映射）</li>
+          <li><strong>矩阵</strong>：沿用货道映射矩阵（A~J 层 × 0~9 列），格内显示物号（演示数据 11~110 递增，A0=11、J9=110）；已合并货道以<strong>绿色块 + 右上角货道数角标</strong>标识</li>
+          <li><strong>合并流程（先选后合并 · 两两配对）</strong>：在矩阵上<strong>直接点选货道</strong>进入选择模式（橙色选中框）→ 点选货道（<strong>仅左右相邻，支持一次多选多对</strong>）→ 底部出现「取消」+「合并所选 (N)」→ 点「合并所选」→ 确认弹窗列出<strong>每对的合并结果（默认保留奇数物号）</strong>→ 确认后生成多个两两合并组；工具栏「合并货道」仅作辅助入口，主入口为直接点选</li>
+          <li><strong>相邻约束</strong>：只能选择与已选货道<strong>左右相邻（同一行）</strong>的货道继续合并；点击不相邻货道时 toast 提示「只能选择左右相邻的货道进行合并」并拒绝选中</li>
+          <li><strong>两两合并</strong>：合并时按所选顺序<strong>自动两两配对</strong>（如 A 行选 11~20，合并为 11、13、15、17、19 五组）；所选货道数为奇数时提示「所选货道需为偶数个（两两合并）」；每组合并后<strong>默认保留奇数物号</strong>（如 12+13 → 13）</li>
+          <li><strong>拆分流程（支持多选批量）</strong>：点「取消合并」→ <strong>可点选多个合并组</strong>（红色框多选）→ 底部「取消合并所选 (N)」→ 二次确认（列出将拆分的组）→ 批量拆分为独立货道并恢复原物号</li>
+          <li><strong>组详情</strong>：点击任意已合并货道 → 弹窗展示组内货道列表、合并物号、货道数，可直接发起拆组</li>
+          <li><strong>保存推送</strong>：点「保存」后推送设备生效；<strong>保存后停留在当前页，不自动返回</strong>（用户点左上角返回）；顶部黄条 toast 展示逐柜进度，失败可重试；<strong>未做任何修改时提示「未做修改，可直接返回」</strong>；未保存的合并/拆分修改在返回时丢弃</li>
+        </ul>
+      </div>
+      <div class="req-section">
+        <div class="req-h">三、规则与边界</div>
+        <ul class="req-ul">
+          <li>合并<strong>仅限同柜体内</strong>的货道；切换柜体 Tab 后选择清空，各柜体合并独立编辑</li>
+          <li>合并货道<strong>必须左右相邻</strong>（同一行内相邻）；不相邻选择被拒绝并 toast 提示</li>
+          <li>合并<strong>只能两两配对</strong>（默认保留奇数物号），支持一次多选多对；所选数量必须为偶数</li>
+          <li>物号为空（未映射）的货道<strong>不可参与合并</strong>；已在映射页被修改的物号直接沿用</li>
+          <li>合并不改变映射关系：拆分后货道物号恢复为<strong>合并前各自的原物号</strong></li>
+          <li>合并组内货道库存统一扣减、出货时从组内任一货道出货（设备侧逻辑，本页仅配置关系）</li>
+        </ul>
+      </div>
+      <div class="req-section">
+        <div class="req-h">四、异常与权限</div>
+        <ul class="req-ul">
+          <li>设备离线时阻断保存推送并 toast 提示</li>
+          <li>权限点：lane_merge:view / edit / push</li>
+          <li>进入 / 合并 / 拆分 / 保存推送 / 失败重试均需记录操作日志</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="push-toast" id="pushToast"></div>
+
+<script>
+/* ============ 数据模型 ============ */
+/* 设备柜体结构（与货道映射原型保持一致） */
+let deviceCabinets = [
+  { id: 'host', name: '主柜', rows: 10, cols: 10, lanes: 100 },
+  { id: 'sub1', name: '副柜1', rows: 6, cols: 10, lanes: 60 },
+];
+/* 各柜体货道物号矩阵（草稿态） */
+let deviceMatrix = {};
+/* 各柜体已保存的物号矩阵（源数据） */
+let savedMatrix = {};
+/* 各柜体合并组 { cabId: { gid: { hw, cells: [[r,c],...] } } }（草稿态） */
+let mergeGroups = {};
+/* 已保存的合并组（源数据） */
+let savedMergeGroups = {};
+let cCurCab = 'host';
+let mergeSeq = 0;          // 合并组全局序号
+let cMode = 'normal';      // normal | merge | unmerge
+let picking = new Set();   // 合并选择中已选格子 "r,c"
+let pendingUnmergeGid = null; // 待拆分的合并组（单组入口）
+let pendingUnmergeGids = [];   // 待拆分的合并组集合（多选批量）
+
+function initData() {
+  deviceMatrix = {}; savedMatrix = {}; mergeGroups = {}; savedMergeGroups = {};
+  // 矩阵物号：主柜 11-110 递增（A0=11, A9=20, B0=21, ..., J0=101），副柜从 111 继续
+  let i = 11;
+  deviceCabinets.forEach(cab => {
+    cab.defaultStart = i;
+    const m = [];
+    for (let r = 0; r < cab.rows; r++) {
+      const row = [];
+      for (let c = 0; c < cab.cols; c++) row.push(i++);
+      m.push(row);
+    }
+    deviceMatrix[cab.id] = m;
+    savedMatrix[cab.id] = m.map(row => row.slice());
+    mergeGroups[cab.id] = {};
+    savedMergeGroups[cab.id] = {};
+  });
+  cCurCab = deviceCabinets[0].id;
+}
+
+/* 从已保存源数据恢复（进入 / 返回未保存时） */
+function loadSaved() {
+  deviceMatrix = {};
+  for (const id in savedMatrix) deviceMatrix[id] = savedMatrix[id].map(row => row.slice());
+  mergeGroups = {};
+  for (const id in savedMergeGroups) {
+    mergeGroups[id] = JSON.parse(JSON.stringify(savedMergeGroups[id]));
+  }
+}
+
+/* 提交草稿为已保存（保存推送成功后） */
+function commitAll() {
+  savedMatrix = {};
+  for (const id in deviceMatrix) savedMatrix[id] = deviceMatrix[id].map(row => row.slice());
+  savedMergeGroups = JSON.parse(JSON.stringify(mergeGroups));
+}
+
+/* 各柜体合并组数 */
+function groupCount(cabId) { return Object.keys(mergeGroups[cabId] || {}).length; }
+
+/* ============ 通用 ============ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+/* ============ 页面流转 ============ */
+function cGoPage2() {
+  document.getElementById('cPage1').style.display = 'none';
+  document.getElementById('cPage2').style.display = 'flex';
+  document.getElementById('cNavTitle').textContent = '货道合并';
+  document.getElementById('cNavBack').style.visibility = 'visible';
+  loadSaved();
+  exitMode(true);
+  closeModal('cMergeConfirm'); closeModal('cGroupDetail'); closeModal('cUnmergeConfirm');
+  if (!deviceCabinets.find(c => c.id === cCurCab)) cCurCab = deviceCabinets[0].id;
+  renderCabTabs();
+  renderMatrix(cCurCab);
+}
+function cBack() {
+  if (document.getElementById('cPage2').style.display !== 'none') {
+    document.getElementById('cPage2').style.display = 'none';
+    document.getElementById('cPage1').style.display = 'block';
+    document.getElementById('cNavTitle').textContent = '机器详情';
+    document.getElementById('cNavBack').style.visibility = 'hidden';
+    closeModal('cMergeConfirm'); closeModal('cGroupDetail'); closeModal('cUnmergeConfirm');
+    exitMode(true);
+  }
+}
+
+/* 柜体 Tab */
+function renderCabTabs() {
+  const el = document.getElementById('cCabTabs');
+  el.innerHTML = deviceCabinets.map(c => {
+    const isActive = c.id === cCurCab ? ' active' : '';
+    return `<div class="cab-tab${isActive}" onclick="cSwitchCab('${c.id}')">${c.name}</div>`;
+  }).join('');
+}
+function cSwitchCab(id) {
+  cCurCab = id;
+  exitMode(true);
+  renderCabTabs();
+  renderMatrix(id);
+}
+
+/* 模式切换 */
+function exitMode(quiet) {
+  cMode = 'normal';
+  picking.clear();
+  document.getElementById('cMergeBtn').classList.remove('on');
+  document.getElementById('cUnmergeBtn').classList.remove('on');
+  document.getElementById('cHint').innerHTML = '💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。';
+  if (!quiet) renderMatrix(cCurCab);
+}
+/* 「合并货道」：仅作为进入选择模式的辅助入口（主要入口=直接点格子） */
+function toggleMergeMode() {
+  if (cMode === 'merge') { exitMode(true); renderMatrix(cCurCab); return; }
+  cMode = 'merge';
+  picking.clear();
+  document.getElementById('cMergeBtn').classList.add('on');
+  document.getElementById('cUnmergeBtn').classList.remove('on');
+  document.getElementById('cHint').innerHTML = '💡 点击选择要合并的货道（需<b>左右相邻</b>，支持多选多对），再次点击可取消选择；选择完成后点底部<b>「合并所选」</b>（自动两两配对）。';
+  renderMatrix(cCurCab);
+}
+function toggleUnmergeMode() {
+  if (cMode === 'unmerge') { exitMode(true); renderMatrix(cCurCab); return; }
+  cMode = 'unmerge';
+  picking.clear();
+  document.getElementById('cUnmergeBtn').classList.add('on');
+  document.getElementById('cMergeBtn').classList.remove('on');
+  document.getElementById('cHint').innerHTML = '💡 点击目标<b>合并组</b>（可多选），再次点击可取消选择；选好后点底部<b>「取消合并所选」</b>批量拆分。';
+  renderMatrix(cCurCab);
+}
+/* 取消选择（底部「取消」按钮） */
+function cancelPick() {
+  exitMode(true);
+  renderMatrix(cCurCab);
+}
+
+/* ============ 矩阵渲染 ============ */
+function renderMatrix(cabId) {
+  const cab = deviceCabinets.find(c => c.id === cabId);
+  const mat = deviceMatrix[cabId];
+  const groups = mergeGroups[cabId] || {};
+  const m = document.getElementById('cMatrix');
+  const cols = cab.cols, rows = cab.rows;
+  const letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  let h = '';
+  h += '<div class="m-axis"></div>';
+  for (let c = 0; c < cols; c++) h += `<div class="m-head x">${c}</div>`;
+  for (let r = 0; r < rows; r++) {
+    h += `<div class="m-head y">${letters[r]}</div>`;
+    for (let c = 0; c < cols; c++) {
+      const v = mat[r][c];
+      const isEmpty = (v === '' || v === null || v === undefined);
+      const gid = findGroupAt(groups, r, c);
+      let cls = '';
+      let cnt = '';
+      if (gid) { cls = ' merged'; cnt = groups[gid].cells.length; }
+      if (cMode === 'merge' && picking.has(r + ',' + c)) cls += ' picking';
+      if (cMode === 'unmerge' && gid && picking.has('g' + gid)) cls += ' unmerge-tgt';
+      const extra = gid ? ` data-gid="${gid}"` : '';
+      h += `<div class="m-cell${cls}${isEmpty ? ' empty' : ''}" data-r="${r}" data-c="${c}"${extra} data-cnt="${cnt || ''}" onclick="cellClick(${r},${c})">${isEmpty ? '' : (gid ? groups[gid].hw : v)}</div>`;
+    }
+  }
+  m.innerHTML = h;
+  document.getElementById('cMergeCount').textContent = groupCount(cabId);
+  updateBottomBtn();
+}
+
+function findGroupAt(groups, r, c) {
+  for (const gid in groups) {
+    if (groups[gid].cells.some(([cr, cc]) => cr === r && cc === c)) return gid;
+  }
+  return null;
+}
+
+/* 判断 (r,c) 是否与已选货道集合中任一格左右相邻（仅同一行内相邻） */
+function isAdjacent(r, c) {
+  for (const k of picking) {
+    const [pr, pc] = k.split(',').map(Number);
+    if (pr === r && Math.abs(pc - c) === 1) return true;
+  }
+  return false;
+}
+
+/* 合并后默认保留奇数物号；若两个都是奇数取左侧（列号小），两个都是偶数也取左侧 */
+function pickOddHw(hwA, hwB) {
+  const aOdd = hwA % 2 === 1, bOdd = hwB % 2 === 1;
+  if (aOdd && !bOdd) return hwA;
+  if (!aOdd && bOdd) return hwB;
+  return hwA; // 同为奇或同为偶 → 取第一个（左侧）
+}
+
+function updateBottomBtn() {
+  const saveRow = document.getElementById('cSaveRow');
+  const pickRow = document.getElementById('cPickRow');
+  const saveBtn = document.getElementById('cSaveBtn');
+  const pickBtn = document.getElementById('cPickBtn');
+  if (cMode === 'merge') {
+    const n = picking.size;
+    saveRow.style.display = 'none';
+    pickRow.style.display = 'flex';
+    pickBtn.textContent = n >= 2 ? `合并所选 (${n})` : '合并所选 (0)';
+    pickBtn.disabled = n < 2;
+  } else if (cMode === 'unmerge') {
+    const n = picking.size;
+    saveRow.style.display = 'none';
+    pickRow.style.display = 'flex';
+    pickBtn.textContent = n >= 1 ? `取消合并所选 (${n})` : '取消合并所选 (0)';
+    pickBtn.disabled = n < 1;
+  } else {
+    pickRow.style.display = 'none';
+    saveRow.style.display = 'flex';
+    saveBtn.textContent = '保存';
+    saveBtn.disabled = false;
+  }
+}
+
+/* ============ 格子点击 ============ */
+function cellClick(r, c) {
+  const cab = deviceCabinets.find(c => c.id === cCurCab);
+  const mat = deviceMatrix[cCurCab];
+  const groups = mergeGroups[cCurCab] || {};
+  const isEmpty = (mat[r][c] === '' || mat[r][c] === null || mat[r][c] === undefined);
+  const gid = findGroupAt(groups, r, c);
+
+  if (cMode === 'merge') {
+    if (isEmpty) { showToast('物号为空（未映射）的货道不可合并'); return; }
+    if (gid) { showToast('该货道已在合并组内，请先拆组'); return; }
+    const key = r + ',' + c;
+    // 只能选择与已选货道左右相邻（同一行）的货道
+    if (!picking.has(key) && picking.size > 0 && !isAdjacent(r, c)) {
+      showToast('只能选择左右相邻的货道进行合并');
+      return;
+    }
+    if (picking.has(key)) picking.delete(key); else picking.add(key);
+    // 全部取消后自动退出选择模式，回到 normal 默认状态
+    if (picking.size === 0) {
+      exitMode(true);
+      renderMatrix(cCurCab);
+      return;
+    }
+    document.getElementById('cHint').innerHTML = '💡 已选 <b>' + picking.size + '</b> 个货道，继续点击选择<b>左右相邻</b>货道（两两配对），再次点击可取消选择；选好后点底部<b>「合并所选」</b>。';
+    renderMatrix(cCurCab);
+    return;
+  }
+  if (cMode === 'unmerge') {
+    if (!gid) { showToast('该货道未参与合并'); return; }
+    // 多选切换：g{id} 前缀存组 ID，避免与格子坐标混淆
+    const key = 'g' + gid;
+    if (picking.has(key)) picking.delete(key); else picking.add(key);
+    // 全部取消后自动退出选择模式
+    if (picking.size === 0) {
+      exitMode(true);
+      renderMatrix(cCurCab);
+      return;
+    }
+    document.getElementById('cHint').innerHTML = '💡 已选 <b>' + picking.size + '</b> 个合并组，继续点击选择（可多选），再次点击可取消；选好后点底部<b>「取消合并所选」</b>。';
+    renderMatrix(cCurCab);
+    return;
+  }
+  // normal 模式：直接点选货道 = 进入选择模式并选中（先选后合并）
+  if (gid) {
+    showGroupDetail(gid);
+  } else if (isEmpty) {
+    showToast('物号为空（未映射）的货道不可合并');
+  } else {
+    cMode = 'merge';
+    picking.add(r + ',' + c);
+    document.getElementById('cMergeBtn').classList.add('on');
+    document.getElementById('cUnmergeBtn').classList.remove('on');
+    document.getElementById('cHint').innerHTML = '💡 已选 <b>1</b> 个货道，继续点击选择<b>左右相邻</b>货道（两两配对），再次点击可取消选择；选好后点底部<b>「合并所选」</b>。';
+    renderMatrix(cCurCab);
+  }
+}
+
+/* ============ 合并 ============ */
+function askMerge() {
+  if (picking.size < 2) { showToast('请至少选择 2 个货道'); return; }
+  if (picking.size % 2 !== 0) { showToast('所选货道需为偶数个（两两合并）'); return; }
+  const mat = deviceMatrix[cCurCab];
+  const cells = [...picking].map(k => k.split(',').map(Number));
+  cells.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  // 校验每对左右相邻
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    if (a[0] !== b[0] || Math.abs(a[1] - b[1]) !== 1) { showToast('两两合并的货道需左右相邻'); return; }
+  }
+  const groupN = cells.length / 2;
+  let rows = '';
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    const hw = pickOddHw(mat[a[0]][a[1]], mat[b[0]][b[1]]);
+    rows += `<div class="mg-row"><span>${rowL(a[0])}${a[1]} + ${rowL(b[0])}${b[1]}</span><b>→ ${hw}</b></div>`;
+  }
+  const msg = `
+    <div>所选 <b>${cells.length}</b> 个货道将两两合并为 <b>${groupN}</b> 个货道（<b>默认保留奇数物号</b>）：</div>
+    <div class="mg-list">${rows}</div>
+    <div style="margin-top:10px;font-size:11px;color:#999">每组合并后库存统一扣减，出货时从组内任一货道出货（设备侧逻辑）。</div>`;
+  document.getElementById('cMergeMsg').innerHTML = msg;
+  openModal('cMergeConfirm');
+}
+
+function doMerge() {
+  const mat = deviceMatrix[cCurCab];
+  const cells = [...picking].map(k => k.split(',').map(Number));
+  cells.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (cells.length % 2 !== 0) { closeModal('cMergeConfirm'); showToast('所选货道需为偶数个（两两合并）'); return; }
+  let created = 0;
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    if (a[0] !== b[0] || Math.abs(a[1] - b[1]) !== 1) { closeModal('cMergeConfirm'); showToast('两两合并的货道需左右相邻'); return; }
+    // 默认保留奇数物号（如 12+13 → 13）
+    const hw = pickOddHw(mat[a[0]][a[1]], mat[b[0]][b[1]]);
+    // 记录每个货道合并前的原物号，供拆分时恢复
+    const origHw = {};
+    origHw[a[0] + ',' + a[1]] = mat[a[0]][a[1]];
+    origHw[b[0] + ',' + b[1]] = mat[b[0]][b[1]];
+    mergeSeq++;
+    mergeGroups[cCurCab][mergeSeq] = { hw, cells: [a, b], origHw };
+    created++;
+  }
+  closeModal('cMergeConfirm');
+  exitMode(true);
+  renderMatrix(cCurCab);
+  showToast('已生成 ' + created + ' 个合并组（两两合并，默认保留奇数物号）');
+}
+
+/* ============ 合并组详情 / 拆组 ============ */
+function showGroupDetail(gid) {
+  const groups = mergeGroups[cCurCab] || {};
+  const g = groups[gid];
+  if (!g) return;
+  const names = g.cells.map(([r, c]) => rowL(r) + c).join('、');
+  document.getElementById('cGroupTitle').textContent = '合并组 #' + gid;
+  document.getElementById('cGroupMsg').innerHTML = `
+    <div>该组合并了 <b>${g.cells.length}</b> 个货道：</div>
+    <div class="mg-list">
+      <div class="mg-row"><span>包含货道</span><b>${names}</b></div>
+      <div class="mg-row"><span>合并物号</span><b>${g.hw}</b></div>
+      <div class="mg-row"><span>货道数</span><b>${g.cells.length} 个</b></div>
+    </div>`;
+  pendingUnmergeGid = gid;
+  pendingUnmergeGids = [gid];
+  openModal('cGroupDetail');
+}
+
+function askUnmerge() {
+  const groups = mergeGroups[cCurCab] || {};
+  // 优先使用组详情弹窗设置的 pendingUnmergeGids（单组入口）
+  let valid;
+  if (pendingUnmergeGids && pendingUnmergeGids.length > 0) {
+    valid = pendingUnmergeGids.filter(gid => groups[gid]);
+  } else {
+    // 否则从取消合并模式的多选集合中取
+    const gids = [...picking].filter(k => k.startsWith('g')).map(k => Number(k.slice(1)));
+    valid = gids.filter(gid => groups[gid]);
+  }
+  if (valid.length === 0) {
+    pendingUnmergeGids = [];
+    showToast('请先选择要取消合并的合并组');
+    return;
+  }
+  pendingUnmergeGids = valid;
+  const names = valid.map(gid => '#' + gid).join('、');
+  document.getElementById('cUnmergeMsg').innerHTML = `将拆分 <b>${valid.length}</b> 个合并组（${names}）：<br>拆分后货道恢复为独立货道，各自使用原物号，尚未保存的修改也会丢失。`;
+  closeModal('cGroupDetail');
+  openModal('cUnmergeConfirm');
+}
+
+function doUnmerge() {
+  const gids = pendingUnmergeGids || [];
+  if (gids.length === 0) return;
+  const groups = mergeGroups[cCurCab] || {};
+  const cab = deviceCabinets.find(c => c.id === cCurCab);
+  const base = (cab && cab.defaultStart) || 11;
+  let count = 0;
+  gids.forEach(gid => {
+    const g = groups[gid];
+    if (!g) return;
+    // 拆分：恢复各货道原物号（按 origHw 记录）；无记录时回退默认软号
+    g.cells.forEach(([r, c]) => {
+      const orig = g.origHw && g.origHw[r + ',' + c];
+      deviceMatrix[cCurCab][r][c] = (orig !== undefined && orig !== '') ? orig : (base + r * cab.cols + c);
+    });
+    delete groups[gid];
+    count++;
+  });
+  pendingUnmergeGids = null;
+  closeModal('cUnmergeConfirm');
+  exitMode(true);
+  renderMatrix(cCurCab);
+  showToast('已拆分 ' + count + ' 个合并组，货道恢复为独立货道');
+}
+
+/* ============ 保存 → 推送 ============ */
+function cSave() {
+  if (cMode === 'merge') { askMerge(); return; }
+  if (cMode === 'unmerge') { askUnmerge(); return; }
+  // dirty 判断：与已保存的合并组对比；拆完所有组也是有效修改（保存"删除合并"意图）
+  const isDirty = JSON.stringify(mergeGroups) !== JSON.stringify(savedMergeGroups);
+  if (!isDirty) { showToast('未做修改，可直接返回'); return; }
+  commitAll();
+  // 保存后停留在当前页，不自动返回；用户可点左上角返回
+  showPushToast('progress', '正在推送设备…');
+  const subs = deviceCabinets.filter(c => c.role !== 'host');
+  const steps = ['✓ 主柜已推送'];
+  subs.forEach((c, i) => {
+    setTimeout(() => {
+      const ok = Math.random() < 0.65;
+      if (ok) steps.push(`✓ ${c.name}已推送`);
+      else steps.push(`✕ ${c.name}推送失败`);
+      const allDone = steps.length >= 1 + subs.length;
+      const allOk = steps.every(s => s.startsWith('✓'));
+      const failNum = steps.filter(s => s.startsWith('✕')).length;
+      if (allDone) {
+        if (allOk) showPushToast('success', `已推送 ${deviceCabinets.length} 个柜体`);
+        else showPushToast('fail', `${failNum} 个柜体推送失败，点击重试`);
+      } else {
+        showPushToast('progress', '正在推送设备… ' + steps.join(' · '));
+      }
+    }, 600 + i * 350);
+  });
+  setTimeout(() => {
+    if (subs.length === 0) showPushToast('success', '已推送至设备');
+  }, 500);
+}
+
+/* 推送进度 toast */
+let pushToastTimer = null;
+function showPushToast(type, text) {
+  const t = document.getElementById('pushToast');
+  if (!t) return;
+  const retryHtml = type === 'fail' ? '<span class="push-toast-action" onclick="cSave()">重新推送</span>' : '';
+  const icon = type === 'progress' ? '⏳' : type === 'success' ? '✓' : '⚠';
+  t.innerHTML = `<span class="push-toast-icon ${type}">${icon}</span><span class="push-toast-text">${text}</span>${retryHtml}`;
+  t.classList.remove('show', 'progress', 'success', 'fail');
+  void t.offsetWidth;
+  t.classList.add('show', type);
+  if (pushToastTimer) clearTimeout(pushToastTimer);
+  const hide = type === 'success' ? 2500 : (type === 'fail' ? 6000 : 60000);
+  pushToastTimer = setTimeout(() => t.classList.remove('show'), hide);
+}
+
+function rowL(i) { return String.fromCharCode(65 + i); }
+
+/* ============ 初始化 ============ */
+initData();
+renderCabTabs();
+renderMatrix(cCurCab);
+</script>
+</body>
+</html>
