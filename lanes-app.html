@@ -104,15 +104,23 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 <script id="reqMdSource" type="text/plain">
 # 货道管理（货道映射）需求说明 — 海外 APP
 
-> 版本：v1.2-APP
-> 日期：2026-09-29
+> 版本：v1.4-APP
+> 日期：2026-10-10
 > 关联原型：`货道管理-app/index.html`（海外 APP 端 · 375×812）
+
+## 版本修订记录
+
+| 版本 | 日期 | 修订内容 |
+| -- | -- | -- |
+| v1.2-APP | 2026-09-29 | 海外 APP 版货道管理首版：仅货道映射（+ 货道检测占位） |
+| v1.3-APP | 2026-10-10 | 新增「货道合并」Tab，迁移小程序版货道合并能力；映射与合并共享物号数据；修复切 Tab 时 `clearSel` 未定义的问题 |
+| **v1.4-APP** 🔧 | 2026-10-10 | **货道合并拆出为独立页面**（见《货道合并-APP需求说明》v1.0-APP）：本页 Tab 恢复为 2 个（货道映射 / 货道检测），物号数据不再与合并共享 |
 
 ---
 
 ## 一、页面定位
 
-货道管理是机器详情「货道映射」入口跳转的**独立页面**，面向运营/运维人员，在矩阵上完成货道软号、物号的查看与物号编辑，并支持主副柜切换、批量改号、保存推送。**本说明对应海外 APP 版本**（与小程序版货道管理共用同一套矩阵与交互逻辑；主要差异仅在顶部导航形态：APP 原生导航 + 设备温度 `-8℃`，无微信胶囊）。
+货道管理是机器详情「货道映射」入口跳转的**独立页面**，面向运营/运维人员，在矩阵上完成货道软号、物号的查看与物号编辑，并支持主副柜切换、批量改号、保存推送。**货道合并已拆出为独立页面**（见《货道合并-APP需求说明》v1.0-APP），本页只负责映射与检测。**本说明对应海外 APP 版本**（与小程序版货道管理共用同一套矩阵与交互逻辑；主要差异仅在顶部导航形态：APP 原生导航 + 设备温度 `-8℃`，无微信胶囊）。
 
 ---
 
@@ -143,10 +151,11 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 - 左侧「返回」图标 +「主页」图标，中间标题「货道管理」；**右上角显示设备温度**（例：`-8℃`）。
 - 与小程序版差异：小程序版右上角为微信胶囊（··· / ⊙），本 APP 版为原生导航 + 设备温度，无微信胶囊。
 
-### 2.2 功能 Tab
-- 两个 Tab：**货道映射**（默认选中）、**货道检测**。
+### 2.2 功能 Tab 🔧
+- **两个** Tab：**货道映射**（默认选中）、**货道检测**（占位空态）。
 - 选中态：文字蓝 `#378ADD`、加粗，底部蓝条。
 - 货道检测 Tab 当前为**占位空态**（搜索图标 + 「货道检测」标题），具体内容待补充。
+- **货道合并已拆出为独立页面**（v1.4-APP 起不再作为本页第三个 Tab），见《货道合并-APP需求说明》v1.0-APP。
 
 ### 2.3 柜体 Tab（位于功能 Tab 之下）
 - 位于「货道映射 / 货道检测」Tab 行**下方**，且**仅在货道映射页内显示**（货道检测页不显示）：**主柜**（默认选中）、**副柜1**。
@@ -253,7 +262,8 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 1. **货道检测 Tab 内容**：当前仅占位空态，需业务侧提供检测交互（单个/整层/整柜、状态着色、结果展示）。
 2. **保存推送流程**：是否沿用既有「推送进度 toast + 失败重试」；离线/权限边界是否复用机器详情现有约定。
 3. **副柜数量**：当前 1 个副柜1（6×10=60）；如实际设备有副柜2+，Tab 横向扩展即可，规则同副柜1。
-4. **APP 与小程序差异**：仅顶部导航形态不同（APP 原生 + 设备温度 `-8℃` / 小程序微信胶囊）；矩阵与交互逻辑一致。
+4. **货道合并入口**：合并已独立成页，本页是否需提供跳转入口，待业务确认。
+5. **APP 与小程序差异**：仅顶部导航形态不同（APP 原生 + 设备温度 `-8℃` / 小程序微信胶囊）；矩阵与交互逻辑一致。
 
 ---
 
@@ -271,6 +281,20 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 - [ ] 物号 ≠ 默认时黄底标记修改态。
 - [ ] 点击保存提示「已保存并推送 2 个柜体（修改 N 处）」。
 - [ ] 货道检测 Tab 占位空态正常展示。
+
+---
+
+## 八、本次修改明细（v1.3-APP → v1.4-APP）
+
+| 项目 | v1.3-APP（上次迭代） | v1.4-APP（本次） | 类型 |
+| -- | -- | -- | -- |
+| 功能 Tab | 3 个（货道映射 / 货道合并 / 货道检测） | **2 个**（货道映射 / 货道检测）——货道合并拆出为独立页面 | 🔧 |
+| 货道合并 | 本页第三个 Tab，与映射共享物号数据 | **独立页面**《货道合并》v1.0-APP：导航标题「货道合并」、无 Tab 行、物号只读 | 🔧 |
+| 物号数据 | 映射与合并共享同一份 `hw`，互相同步 | 本页独立持有；合并页进入时读取设备当前物号 | 🔧 |
+| 弹窗 / 底部双按钮 | 合并确认 / 组详情 / 拆组确认 + 选择态双按钮 | 随合并一并移出本页 | 🔧 |
+| 切 Tab 行为 | 离开合并页需退出选择模式 | 仅需清空映射页选中（`clearSel`） | 🔧 |
+
+🆕 = 新增；🔧 = 调整 / 修复 / 移出。
 
 </script>
 </head>
@@ -528,7 +552,15 @@ function switchTab(t) {
   document.getElementById('tabCheck').classList.toggle('active', t === 'check');
   document.getElementById('pageMap').style.display = t === 'map' ? 'flex' : 'none';
   document.getElementById('pageCheck').style.display = t === 'check' ? 'flex' : 'none';
-  if (t !== 'map') { clearSel(); }
+  if (t !== 'map') clearSel();          // 离开货道映射 → 清空选中
+}
+
+/* 清空货道映射页的选中（选中按柜体维度，切 Tab / 切柜均清空） */
+function clearSel() {
+  if (selected.size === 0) { document.getElementById('selCount').textContent = 0; return; }
+  selected = new Set();
+  document.getElementById('selCount').textContent = 0;
+  renderCells();
 }
 
 /* ================= Toast ================= */
@@ -558,8 +590,19 @@ renderCells();
     </div>
 
     <div class="req-section">
+      <div class="req-h">版本修订记录</div>
+      <table class="req-tbl">
+        <tr><th style="width:70px">版本</th><th style="width:92px">日期</th><th>修订内容</th></tr>
+        <tr><td>v1.2-APP</td><td>2026-09-29</td><td>海外 APP 版货道管理首版（仅货道映射 + 货道检测占位）</td></tr>
+        <tr><td>v1.3-APP</td><td>2026-10-10</td><td>新增「货道合并」Tab：迁移小程序版货道合并能力（先选后合并 / 仅左右相邻 / 两两配对 / 保留奇数物号 / origHw 拆组恢复），并与货道映射共享物号数据</td></tr>
+        <tr><td><b>v1.4-APP</b> 🔧</td><td>2026-10-10</td><td><b>货道合并拆出为独立页面</b>（见《货道合并-APP需求说明》v1.0-APP）：本页 Tab 恢复为 2 个（货道映射 / 货道检测），物号数据不再与合并共享；同时修复 <code>clearSel()</code> 未定义导致切 Tab 报 JS 错</td></tr>
+      </table>
+    </div>
+
+    <div class="req-section">
       <div class="req-h">一、页面定位</div>
       <p class="req-p">货道管理是机器详情「货道映射」入口跳转的<strong style="color:#f0f0f0">独立页面</strong>，面向运营/运维人员，在矩阵上完成货道软号、物号的查看与物号编辑，并支持主副柜切换、批量改号、保存推送。</p>
+      <p class="req-note">关联：<b>货道合并已拆出为独立页面</b>（见《货道合并-APP需求说明》v1.0-APP），本页只负责映射与检测，不再承载合并能力。</p>
     </div>
 
     <div class="req-section">
@@ -658,6 +701,19 @@ renderCells();
         <li>保存提示「已保存并推送 2 个柜体（修改 N 处）」</li>
         <li>货道检测 Tab 占位空态正常</li>
       </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">八、本次修改明细（v1.3-APP → v1.4-APP）</div>
+      <table class="req-tbl">
+        <tr><th style="width:24%">项目</th><th style="width:30%">v1.3-APP（上次迭代）</th><th style="width:38%">v1.4-APP（本次）</th><th style="width:8%">类型</th></tr>
+        <tr><td>功能 Tab</td><td>3 个（货道映射 / 货道合并 / 货道检测）</td><td><b>2 个</b>（货道映射 / 货道检测）——货道合并拆出为独立页面</td><td>🔧</td></tr>
+        <tr><td>货道合并</td><td>本页第三个 Tab，与映射共享物号数据</td><td><b>独立页面</b>《货道合并》v1.0-APP：导航标题「货道合并」、无 Tab 行、物号只读</td><td>🔧</td></tr>
+        <tr><td>物号数据</td><td>映射与合并共享同一份 hw，互相影响</td><td>本页独立持有；合并页进入时读取设备当前物号</td><td>🔧</td></tr>
+        <tr><td>弹窗 / 底部双按钮</td><td>合并确认 / 组详情 / 拆组确认 + 选择态双按钮</td><td>随合并一并移出本页</td><td>🔧</td></tr>
+        <tr><td>切 Tab 行为</td><td>离开合并页需退出选择模式</td><td>仅需清空映射页选中（<code>clearSel</code>）</td><td>🔧</td></tr>
+      </table>
+      <p class="req-note">🆕 = 新增；🔧 = 调整/修复/移出。</p>
     </div>
   </div>
 
