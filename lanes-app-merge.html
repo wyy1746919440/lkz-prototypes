@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>货道合并 — 海外 APP 原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+
+/* ===== 整体布局：左侧手机原型 + 右侧需求说明面板 ===== */
+.page-wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 24px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; }
+
+/* ===== 右侧需求说明面板 ===== */
+.req-panel { width: 560px; flex: 1 1 420px; max-width: 620px; min-width: 360px; background: #252525; border-radius: 12px; padding: 22px 24px; color: #ccc; align-self: flex-start; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.req-panel-hd { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.req-panel-hd-title { flex: 1; min-width: 0; line-height: 1.3; }
+.req-download-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; background: #EF9F27; color: #fff; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 14px; text-decoration: none; transition: opacity .15s, background .15s; }
+.req-download-btn:hover { opacity: .9; }
+.req-download-btn:active { background: #d18b1c; }
+.req-download-btn svg { width: 13px; height: 13px; fill: currentColor; }
+.req-section { background: #2c2c2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.req-section:last-child { margin-bottom: 0; }
+.req-h { font-size: 14px; font-weight: 700; color: #EF9F27; margin-bottom: 10px; }
+.req-h2 { font-size: 12.5px; font-weight: 600; color: #fff; margin: 12px 0 6px; }
+.req-p { font-size: 12.5px; line-height: 1.75; color: #bdbdbd; margin-bottom: 8px; }
+.req-p:last-child { margin-bottom: 0; }
+.req-ul { list-style: none; }
+.req-ul li { font-size: 12.5px; line-height: 1.8; color: #bdbdbd; padding-left: 14px; position: relative; }
+.req-ul li::before { content: '·'; position: absolute; left: 2px; color: #EF9F27; font-weight: 700; }
+.req-ul li b { color: #f0f0f0; font-weight: 600; }
+.req-note { font-size: 11.5px; color: #8f8f8f; line-height: 1.7; margin-top: 6px; }
+.req-tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+.req-tbl th, .req-tbl td { border: 1px solid #3a3a3a; padding: 6px 8px; text-align: left; color: #c4c4c4; line-height: 1.55; vertical-align: top; }
+.req-tbl th { background: #343434; color: #fff; font-weight: 600; }
+.req-tbl td b, .req-tbl th b { color: #f0f0f0; }
+
+/* ===== 手机画框 ===== */
+.phone { width: 375px; height: 812px; background: #F2F2F7; border-radius: 36px; border: 10px solid #111; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+
+/* ===== 导航栏 ===== */
+.nav { height: 48px; background: #fff; display: flex; align-items: center; padding: 0 12px; flex-shrink: 0; }
+.nav-back { width: 64px; display: flex; align-items: center; gap: 10px; color: #111; }
+.nav-back svg { display: block; }
+.nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; color: #111; }
+.nav-extra { width: 64px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
+.nav-temp { font-size: 13px; font-weight: 500; color: #111; letter-spacing: -0.3px; }
+
+/* ===== 柜体 Tab（主柜 / 副柜1） ===== */
+.cab-tabs { display: flex; background: #fff; border-bottom: 1px solid #ececec; flex-shrink: 0; }
+.cab-tab { padding: 9px 16px; font-size: 13px; color: #888; border-bottom: 2px solid transparent; cursor: pointer; }
+.cab-tab.active { color: #378ADD; font-weight: 600; border-bottom-color: #378ADD; }
+
+.page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ===== 工具栏 ===== */
+.mg-bar { flex-shrink: 0; display: flex; align-items: center; gap: 6px; background: #fff; padding: 8px 10px; border-bottom: 1px solid #ececec; }
+.mg-btn { border: 1px solid #dcdce0; background: #fff; color: #444; font-size: 12px; padding: 6px 10px; border-radius: 14px; cursor: pointer; white-space: nowrap; }
+.mg-btn.on { background: #378ADD; border-color: #378ADD; color: #fff; font-weight: 600; }
+.mg-stat { font-size: 11px; color: #888; margin-left: auto; white-space: nowrap; }
+.mg-stat b { color: #2BA471; font-weight: 600; }
+
+/* ===== 矩阵 ===== */
+.mg-scroll { flex: 1; overflow-y: auto; padding: 10px 10px 90px; }
+.mg-body { display: flex; gap: 4px; }
+.mg-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+/* 行头：与货道映射页一致——上下两段「软」(灰) /「物」(蓝)，与格子上软下物一一对应 */
+.mg-ax { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.mg-ax .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.mg-ax .seg.sw { background: #ECECEF; color: #8E8E93; }
+.mg-ax .seg.gw { background: #E6F1FB; color: #378ADD; }
+.mg-cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: start; }
+/* 格子沿用 APP 双行结构：上=软号（灰只读）/ 下=物号（蓝）；合并态整格转绿 */
+.mg-cell { border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; position: relative; flex-shrink: 0; background: #fff; }
+.mg-cell .sw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; background: #F2F2F7; }
+.mg-cell .gw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #378ADD; background: #fff; border-top: 1px solid #F0F0F2; }
+.mg-cell.empty .gw { background: #FAFAFA; border: 1px dashed #C8C8CC; color: transparent; }
+/* 已合并：绿底绿字 */
+.mg-cell.merged .sw { background: #E5F7EE; color: #2BA471; }
+.mg-cell.merged .gw { background: #E5F7EE; color: #2BA471; border-top-color: #CDEEDD; }
+/* 合并选择中：蓝边 + 浅蓝物号底 */
+.mg-cell.picking { outline: 2px solid #378ADD; outline-offset: -2px; }
+.mg-cell.picking .gw { background: #E6F1FB; }
+/* 拆组候选：红边 + 浅红物号底 */
+.mg-cell.unmerge-tgt { outline: 2px solid #F55252; outline-offset: -2px; }
+.mg-cell.unmerge-tgt .gw { background: #FFEBEB; color: #F55252; }
+.hint { margin-top: 12px; font-size: 11px; color: #999; line-height: 1.7; text-align: center; }
+.hint b { color: #666; }
+
+/* ===== 底部按钮 ===== */
+.bottom-bar { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid #ececec; z-index: 10; }
+.bb-row { display: flex; gap: 10px; }
+.bb-row .btn-save, .bb-row .btn-ghost { flex: 1; }
+.btn-save { width: 100%; height: 44px; border: none; border-radius: 22px; background: #378ADD; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-save:active, .btn-ghost:active { opacity: .85; }
+.btn-save:disabled { opacity: .45; cursor: default; }
+.btn-ghost { width: 100%; height: 44px; border: 1px solid #dcdce0; border-radius: 22px; background: #fff; color: #444; font-size: 16px; font-weight: 500; cursor: pointer; }
+
+/* ===== 弹窗 ===== */
+.mask { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 60; display: none; align-items: center; justify-content: center; }
+.mask.show { display: flex; }
+.dialog { background: #fff; border-radius: 16px; padding: 20px; width: 78%; max-width: 300px; }
+.dlg-title { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 10px; text-align: center; }
+.dlg-msg { font-size: 13px; color: #555; line-height: 1.65; margin-bottom: 16px; }
+.dlg-msg b { color: #111; }
+.dlg-actions { display: flex; gap: 10px; }
+.dlg-btn { flex: 1; height: 40px; border-radius: 20px; font-size: 14px; border: none; cursor: pointer; }
+.dlg-btn.primary { background: #378ADD; color: #fff; font-weight: 600; }
+.dlg-btn.plain { background: #fff; border: 1px solid #dcdce0; color: #444; font-weight: 500; }
+.dlg-btn.danger { background: #F55252; color: #fff; font-weight: 600; }
+.mg-list { background: #F5F5F7; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+.mg-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #666; padding: 5px 0; }
+.mg-row + .mg-row { border-top: 1px dashed #e5e5e5; }
+.mg-row b { color: #111; font-weight: 600; }
+.dlg-note { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.6; }
+
+/* ===== Toast ===== */
+.toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(17,17,17,.85); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 10px; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80%; text-align: center; }
+.toast.show { opacity: 1; }
+</style>
+<script id="reqMdSource" type="text/plain">
+# 货道合并需求说明 — 海外 APP（独立页面）
+
+> 版本：v1.2-APP
+> 日期：2026-10-10
+> 关联原型：`货道管理-app/货道合并.html`（海外 APP 端 · 375×812）
+> 同源：小程序版货道合并（见 `outputs/机器详情-货道合并.html`）；APP「货道管理」页 v1.4-APP 起不再承载合并 Tab
+
+## 版本修订记录
+
+| 版本 | 日期 | 修订内容 |
+| -- | -- | -- |
+| **v1.0-APP** 🆕 | 2026-10-10 | 货道合并从「货道管理」页第三个 Tab **拆出为独立页面**：迁移小程序版货道合并全部能力（先选后合并 / 仅左右相邻 / 偶数两两配对 / 保留奇数物号 / origHw 拆组恢复），独立承载柜体 Tab、工具栏、矩阵、底部按钮与三个弹窗 |
+| **v1.1-APP** 🔧 | 2026-10-10 | **行头与货道映射页统一**：原 A/B/C… 字母标签 → 上下两段小矩形「软」（灰底 `#ECECEF` / 灰字）/「物」（浅蓝底 `#E6F1FB` / 蓝字），各 26px、圆角 6px，与格子上软下物一一对应；行标 A~ 仅保留在弹窗文案中作定位 |
+| **v1.2-APP** 🔧 | 2026-10-10 | **已合并组不再显示右上角货道数角标**：合并态仅保留整格绿底 `#E5F7EE` + 物号绿字 `#2BA471`，去掉表示组内货道数的数字角标（避免视觉冗余） |
+
+---
+
+## 一、页面定位
+
+- **独立页面**：货道合并**不再**作为「货道管理」页的功能 Tab，而是机器详情下的**独立入口**，拥有自己的顶部导航（标题「货道合并」）。
+- **与货道映射的关系**：两者是**先后关系**而非同页 Tab——先完成货道映射（物号写入），再做货道合并；本页**只读**物号，不提供编辑（要改物号回货道映射页）。
+- **用途**：把多个左右相邻的货道并为一个出售单元，统一物号、统一扣减库存。
+- 面向运营 / 运维人员；画框 375×812（逻辑像素）。
+
+---
+
+## 二、页面结构
+
+```
+┌─────────────────────────┐
+│  <  ⌂   货道合并        -8℃ │  顶部导航：返回 + 主页、标题、温度
+├─────────────────────────┤
+│   主柜    副柜1           │  柜体 Tab（蓝 #378ADD）
+├─────────────────────────┤
+│ [合并货道][取消合并] 已合并 N 组 │  工具栏（常显）
+├─────────────────────────┤
+│ 软 [软][物][软][物] ...      │  矩阵：上=软号（灰只读）
+│ 物  ...                    │        下=物号（蓝，只读）
+│                           │  行头：上下两段「软」/「物」
+│                           │  主柜 8×10 / 副柜1 6×10
+├─────────────────────────┤
+│  💡 提示语（随模式切换）      │
+├─────────────────────────┤
+│     [  保  存  ]           │  默认；选择中变为
+│                           │  [取消][合并所选 (n)]
+└─────────────────────────┘
+```
+
+### 2.1 顶部导航（APP 原生）
+- 左侧「返回」图标 +「主页」图标，中间标题「**货道合并**」，右上角设备温度（例 `-8℃`）。
+- **无功能 Tab 行**——这是与旧版（Tab 形态）最直观的区别。
+
+### 2.2 柜体 Tab
+- **主柜**（默认）/ **副柜1**，选中态蓝 `#378ADD` 加粗 + 底部蓝条。
+- **切柜清空选择**（选中按柜体维度）；Tab 旁不显示数量/角标。
+
+### 2.3 工具栏（常显）
+- `合并货道`：进入选择模式（on 态蓝底白字），再点退出。
+- `取消合并`：进入拆组选择模式（on 态蓝底白字），再点退出。
+- 右侧「已合并 **N** 组」：N = 当前柜体合并组数。
+
+### 2.4 货道矩阵
+- 沿用 APP 双行结构：**上 = 软号**（灰字 `#8E8E93`、灰底 `#F2F2F7`，只读）、**下 = 物号**（蓝字 `#378ADD`，本页只读）。
+- 主柜 8 层 × 10 列 = 80 货道；副柜1 6 层 × 10 列 = 60 货道。
+- **行头（🆕 v1.1）**：与货道映射页**完全同构**——每行行头为**上下两个小矩形**，上段「软」（灰底 `#ECECEF` / 灰字 `#8E8E93`）、下段「物」（浅蓝底 `#E6F1FB` / 蓝字 `#378ADD`），各 26px、圆角 6px、字号 10px 加粗，**不显示 A/B/C 字母**，与格子上软下物一一对应；为**静态**标签，**不参与选择**（本页无"选整层"能力）。
+- 行标 A~H（主柜）/ A~F（副柜1）**仅在弹窗文案中作定位**（如「A0 + A1 → 13」）。
+
+### 2.5 底部按钮
+- 默认态：单个大圆角蓝按钮「保存」。
+- 选择模式：切换为「取消」+「合并所选 (n)」/「取消合并所选 (n)」（n < 阈值时按钮禁用）。
+
+### 2.6 提示语（hint）
+随模式动态变化：normal = 操作引导；merge = 已选 N 个 + 相邻约束；unmerge = 已选 N 组。
+
+### 2.7 三个弹窗
+| 弹窗 | 入口 | 内容 |
+| -- | -- | -- |
+| 合并确认 | 选择 ≥2 个货道后点「合并所选」 | 每对「A0 + A1 → 物号」的配对结果；取消 / 确认合并 |
+| 合并组详情 | 默认态点击已合并格子 | 包含货道 / 合并物号 / 货道数；关闭 / 拆分组 |
+| 拆组确认 | 组详情点「拆分组」或批量选择后确认 | 将拆分 N 个组（#x、#y）；取消 / 确认拆分 |
+
+---
+
+## 三、编号规则
+
+| 编号 | 公式 | 主柜（8×10） | 副柜1（6×10） | 说明 |
+| -- | -- | -- | -- | -- |
+| 软号 | `行×10 + 列 + 10` | 10 ~ 89 | 10 ~ 69 | 厂测模板默认，自动生成、**只读** |
+| 物号 | `行×10 + 列 + 1` | 1 ~ 80 | 1 ~ 60 | 来自货道映射页，**本页只读**；合并后组内统一为合并物号 |
+| 行标 | A/B/C… | A ~ H | A ~ F | 行号从 0 起（A 层 = 行 0），列号 0~9；**仅用于弹窗文案定位**，行头不再显示字母（v1.1 起改为「软/物」双段） |
+
+- 进入本页时读取设备当前物号（等价于货道映射页保存后的值）。
+- 软号在任何映射 / 合并类原型中均不可编辑。
+
+---
+
+## 四、合并规则（与小程序版一致）
+
+| 规则 | 说明 |
+| -- | -- |
+| 先选后合并 | 直接点击货道即进入选择模式并选中该货道，无需先点「合并货道」按钮 |
+| 仅左右相邻 | 只能选择与已选货道**左右相邻（同一行）**的货道；点击不相邻货道 toast「只能选择左右相邻的货道进行合并」并拒绝选中 |
+| 同柜体约束 | 仅同一柜体内可合并（矩阵按柜体切换，天然满足） |
+| 偶数两两配对 | 所选货道必须为**偶数个**，按行、列排序后自动两两配对；奇数个 toast「所选货道需为偶数个（两两合并）」 |
+| 统一物号 | 每组合并后保留**奇数物号**（12 + 13 → 13）；两个同为奇/同为偶时取**左侧**（列号小） |
+| 空物号不可合并 | 物号为空（未映射）的货道 toast「物号为空（未映射）的货道不可合并」 |
+| 组内货道不可重复合并 | 已在合并组内的货道 toast「该货道已在合并组内，请先拆组」 |
+| 合并确认 | 弹窗展示每对「A0 + A1 → 物号」的配对结果，确认后生效 |
+| 自动退出 | 全部取消选择后自动退出选择模式，回到默认态 |
+
+---
+
+## 五、拆组（取消合并）
+
+- **单组入口**：默认态点击已合并格子 → **合并组详情** → 点「拆分组」→ 二次确认。
+- **批量入口**：点「取消合并」进入拆组选择模式，可多选合并组 → 底部「取消合并所选 (n)」→ 二次确认。
+- **恢复原物号**：拆组后各货道按 `origHw` 记录恢复为**合并前原物号**（不是默认值）；无记录时回退默认物号 `行×10+列+1`。
+- 拆空所有合并组也算有效修改，可正常保存（表达"删除合并"意图）。
+
+---
+
+## 六、保存与推送
+
+- 点击「保存」→ 与已保存快照比对；**无修改**时 toast「未做修改，可直接返回」并阻断。
+- 有修改 → 先 toast「正在推送设备…」，成功提示「已保存并推送 2 个柜体（合并 N 组）」（N = 全部柜体合并组总数）。
+- **保存后停留当前页**，不自动返回；真实环境需校验设备在线（离线提示「设备离线，请稍后重试」）。
+
+---
+
+## 七、视觉规范
+
+| 元素 / 状态 | 样式 | 说明 |
+| -- | -- | -- |
+| 已合并组 | 整格绿底 `#E5F7EE` + 物号绿字 `#2BA471` | 绿色 = 合并语义，与"映射修改黄"区分；**不再显示组内货道数角标** |
+| 合并选择中 | 蓝边 2px `#378ADD` + 物号浅蓝底 `#E6F1FB` | 沿用 APP 蓝主色 |
+| 拆组候选 | 红边 2px `#F55252` + 物号浅红底 `#FFEBEB` | 红色 = 拆组语义 |
+| 物号为空 | 浅灰底 `#FAFAFA` + 灰虚线边框 | 与货道映射页一致 |
+| 软号 | 灰字 `#8E8E93`，任何模式均不可编辑 | 合并组内软号底随整格转浅绿 |
+| **行头「软」段** 🆕 | 灰底 `#ECECEF` + 灰字 `#8E8E93`，10px 加粗，高 26px | 与货道映射页行头一致 |
+| **行头「物」段** 🆕 | 浅蓝底 `#E6F1FB` + 蓝字 `#378ADD`，10px 加粗，高 26px | 与货道映射页行头一致；本页不参与选择 |
+| 主按钮 | 蓝 `#378ADD` 大圆角「保存」 | 与货道管理页一致 |
+| 画框 | 375×812 逻辑像素 | 项目统一尺寸 |
+
+---
+
+## 八、验收标准
+
+- [ ] 页面为独立入口：导航标题「货道合并」，**无功能 Tab 行**。
+- [ ] 主柜 8×10（软号 10~89）、副柜1 6×10（软号 10~69），双行上软下物。
+- [ ] **行头为上下两段「软」(灰) /「物」(浅蓝) 小矩形**，与货道映射页完全一致，且不含 A/B/C 字母。
+- [ ] 直接点货道即进入选择模式；选不相邻货道被拒绝并 toast。
+- [ ] 选 2 个相邻货道 → 底部按钮变「合并所选 (2)」，弹窗展示「A0 + A1 → 奇数物号」，确认后生成 1 个合并组（绿色，**不再显示货道数角标**）。
+- [ ] 奇数个选择被拦截；已合并货道再次合并被拦截；空物号货道不可合并。
+- [ ] 点已合并格子 → 组详情 → 拆分组 → 恢复**合并前原物号**（如 12 与 13 各回各自原值）。
+- [ ] 「取消合并」模式可多选组批量拆分。
+- [ ] 切柜 / 全部取消选择 → 退出选择模式并清空选中。
+- [ ] 未做修改点保存 → toast「未做修改，可直接返回」；有修改 → 推送提示且停留当前页。
+- [ ] 本页物号不可编辑（点击不弹输入框）。
+
+---
+
+## 九、待确认 / 待补充
+
+1. **入口位置**：本页从机器详情哪个入口进入（与「货道映射」并列，或在映射页内提供跳转按钮），待业务确认。
+2. **合并是否仅限两两**：当前与小程序一致仅支持两两配对；若业务需要 3 个及以上货道并为一组，需另行确认统一物号规则与组内标识含义。
+3. **物号为空是否拦截入页**：当前在物号为空时拒绝合并该货道；是否改为"必须先完成映射才能进入本页"，待业务确认。
+4. **合并后的库存与出货**：原型仅作提示，"组内库存统一扣减、出货时从组内任一货道出货"由设备侧实现，需与固件确认。
+5. **保存推送流程**：是否沿用既有「推送进度 toast + 失败重试」；离线 / 权限边界复用机器详情约定。
+6. **副柜数量**：当前 1 个副柜1（6×10=60）；如有副柜2+，Tab 横向扩展即可，规则同副柜1。
+
+---
+
+## 十、本次修改明细（v1.1 → v1.2）
+
+| 项目 | v1.1（变更前） | v1.2（本次） | 类型 |
+| -- | -- | -- | -- |
+| 已合并组角标 | 合并格右上角显示数字角标（如 **2**），表示组内货道数 | **取消角标**，合并态仅保留整格绿底 `#E5F7EE` + 物号绿字 `#2BA471` | 🔧 |
+| 视觉信息 | 颜色 + 角标共同表达"合并"及数量 | **颜色 alone 表达合并语义**，数量通过组内格子的个数直接可见 | 🔧 |
+| 行头（v1.1 已上线） | — | 保持上下两段「软 / 物」小矩形，与映射页一致 | — |
+| 合并 / 拆组 / 保存规则 | — | 完全不变 | — |
+
+🆕 = 本次新增；🔧 = 本次调整 / 变更；— = 保持不变。
+
+</script>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="phone">
+
+  <!-- 导航栏 -->
+  <div class="nav">
+    <div class="nav-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-7 8 7" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="nav-title">货道合并</div>
+    <div class="nav-extra">
+      <div class="nav-temp">-8℃</div>
+    </div>
+  </div>
+
+  <!-- 页面主体 -->
+  <div class="page" id="pageMerge">
+    <!-- 柜体 Tab -->
+    <div class="cab-tabs" id="mgCabTabs"></div>
+
+    <!-- 工具栏 -->
+    <div class="mg-bar">
+      <button class="mg-btn" id="mgMergeBtn" onclick="toggleMergeMode()">合并货道</button>
+      <button class="mg-btn" id="mgUnmergeBtn" onclick="toggleUnmergeMode()">取消合并</button>
+      <span class="mg-stat">已合并 <b id="mgGroupCount">0</b> 组</span>
+    </div>
+
+    <div class="mg-scroll">
+      <div class="mg-body">
+        <div class="mg-axis" id="mgAxis"></div>
+        <div class="mg-cells" id="mgCells"></div>
+      </div>
+      <div class="hint" id="mgHint">💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。</div>
+    </div>
+
+    <!-- 底部按钮：normal=保存 / 选择中=取消 + 合并所选 -->
+    <div class="bottom-bar">
+      <div class="bb-row" id="mgPickRow" style="display:none">
+        <button class="btn-ghost" onclick="cancelPick()">取消</button>
+        <button class="btn-save" id="mgPickBtn" onclick="mgConfirm()">合并所选</button>
+      </div>
+      <div id="mgSaveRow">
+        <button class="btn-save" onclick="mgSave()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：合并确认 -->
+  <div class="mask" id="mgMergeMask">
+    <div class="dialog">
+      <div class="dlg-title">确认合并</div>
+      <div class="dlg-msg" id="mgMergeMsg"></div>
+      <div class="dlg-actions">
+        <button class="dlg-btn plain" onclick="closeMask('mgMergeMask')">取消</button>
+        <button class="dlg-btn primary" onclick="doMerge()">确认合并</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：合并组详情 -->
+  <div class="mask" id="mgGroupMask">
+    <div class="dialog">
+      <div class="dlg-title" id="mgGroupTitle">合并组</div>
+      <div class="dlg-msg" id="mgGroupMsg"></div>
+      <div class="dlg-actions">
+        <button class="dlg-btn plain" onclick="closeMask('mgGroupMask')">关闭</button>
+        <button class="dlg-btn danger" onclick="askUnmerge()">拆分组</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：拆组确认 -->
+  <div class="mask" id="mgUnmergeMask">
+    <div class="dialog">
+      <div class="dlg-title">取消合并</div>
+      <div class="dlg-msg" id="mgUnmergeMsg"></div>
+      <div class="dlg-actions">
+        <button class="dlg-btn plain" onclick="closeMask('mgUnmergeMask')">取消</button>
+        <button class="dlg-btn danger" onclick="doUnmerge()">确认拆分</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ================= 数据 =================
+   柜体：主柜 8 层 × 10 列 = 80 货道；副柜1 6 层 × 10 列 = 60 货道（各柜体数据独立）
+   软号 = 行×10 + 列 + 10（厂测模板默认规则：从 10 起逐列递增，自动生成、只读）
+   物号 = 行×10 + 列 + 1（默认规则：从 1 起递增）；示例：主柜 H5 物号已改为 60
+   进入本页时读取设备当前物号（等价于货道映射页保存后的值），本页不提供物号编辑 */
+const CABINETS = [
+  { id: 'host', name: '主柜', rows: 8, cols: 10 },
+  { id: 'sub1', name: '副柜1', rows: 6, cols: 10 },
+];
+const COLS = 10;
+const cabData = CABINETS.map((cab) => {
+  const sw = [], hw = [];
+  for (let r = 0; r < cab.rows; r++) {
+    const sRow = [], hRow = [];
+    for (let c = 0; c < cab.cols; c++) { sRow.push(r * COLS + c + 10); hRow.push(r * COLS + c + 1); }
+    sw.push(sRow); hw.push(hRow);
+  }
+  return { sw, hw };
+});
+cabData[0].hw[7][4] = 60; // 主柜 H5 = 60（示例：映射页已改过）
+const defaultHw = (r, c) => r * COLS + c + 1;
+
+/* ================= 状态 =================
+   与小程序版货道合并同源：先选后合并、仅左右相邻、偶数两两配对、默认保留奇数物号、
+   origHw 记录原物号供拆组恢复 */
+const mergeGroups = CABINETS.map(() => ({}));                    // 草稿：{ gid: {hw, cells, origHw} }
+let savedMergeGroups = JSON.parse(JSON.stringify(mergeGroups));  // 已保存快照（dirty 比对用）
+let curMgCab = 0;
+let mgMode = 'normal';            // normal | merge | unmerge
+let mgPicking = new Set();        // 选择中：格子 "r,c" 或组 "g{id}"
+let mgSeq = 0;                    // 合并组全局序号
+let pendingUnmergeGids = null;    // 待拆分合并组（来自组详情弹窗或多选）
+
+const mgCabCfg = () => CABINETS[curMgCab];
+const mgGroups = () => mergeGroups[curMgCab];
+const mgSw = () => cabData[curMgCab].sw;
+const mgHw = () => cabData[curMgCab].hw;
+const rowLabel = (i) => String.fromCharCode(65 + i);
+
+/* ---------- 渲染 ---------- */
+function renderMgCabTabs() {
+  document.getElementById('mgCabTabs').innerHTML = CABINETS.map((c, i) =>
+    '<div class="cab-tab' + (i === curMgCab ? ' active' : '') + '" onclick="switchMgCab(' + i + ')">' + c.name + '</div>'
+  ).join('');
+}
+
+function switchMgCab(i) {
+  if (i === curMgCab) return;
+  curMgCab = i;
+  exitMgMode(true);          // 切柜清空选择（选中按柜体维度）
+  renderMgCabTabs(); renderMgAxis(); renderMgCells();
+}
+
+function renderMgAxis() {
+  const cab = mgCabCfg();
+  let h = '';
+  // 行头与货道映射页同构：上段「软」(灰) / 下段「物」(浅蓝)，各 26px，与格子上软下物对齐
+  for (let r = 0; r < cab.rows; r++) {
+    h += '<div class="mg-ax"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
+  }
+  document.getElementById('mgAxis').innerHTML = h;
+}
+
+function renderMgCells() {
+  const cab = mgCabCfg(), sw = mgSw(), hw = mgHw(), groups = mgGroups();
+  let h = '';
+  for (let r = 0; r < cab.rows; r++) {
+    for (let c = 0; c < cab.cols; c++) {
+      const isEmpty = hw[r][c] == null;
+      const gid = findGroupAt(r, c);
+      let cls = '';
+      if (gid) cls = ' merged';
+      else if (isEmpty) cls = ' empty';
+      if (mgMode === 'merge' && mgPicking.has(r + ',' + c)) cls += ' picking';
+      if (mgMode === 'unmerge' && gid && mgPicking.has('g' + gid)) cls += ' unmerge-tgt';
+      const val = gid ? groups[gid].hw : (isEmpty ? '' : hw[r][c]);
+      h += '<div class="mg-cell' + cls + '" data-r="' + r + '" data-c="' + c + '" onclick="mgCellClick(' + r + ',' + c + ')">'
+         +   '<div class="sw">' + sw[r][c] + '</div>'
+         +   '<div class="gw">' + val + '</div>'
+         + '</div>';
+    }
+  }
+  document.getElementById('mgCells').innerHTML = h;
+  document.getElementById('mgGroupCount').textContent = Object.keys(groups).length;
+  updateMgBottom();
+}
+
+/* ---------- 工具 ---------- */
+function findGroupAt(r, c) {
+  const groups = mgGroups();
+  for (const gid in groups) if (groups[gid].cells.some(([cr, cc]) => cr === r && cc === c)) return gid;
+  return null;
+}
+/* 是否与已选货道集合中任一格左右相邻（仅同一行内相邻） */
+function isMgAdjacent(r, c) {
+  for (const k of mgPicking) {
+    const [pr, pc] = k.split(',').map(Number);
+    if (pr === r && Math.abs(pc - c) === 1) return true;
+  }
+  return false;
+}
+/* 合并后统一物号：默认保留奇数物号；同为奇/同为偶取左侧（列号小） */
+function pickOddHw(a, b) {
+  const aOdd = a % 2 === 1, bOdd = b % 2 === 1;
+  if (aOdd && !bOdd) return a;
+  if (!aOdd && bOdd) return b;
+  return a;
+}
+
+/* ---------- 模式切换 ---------- */
+function exitMgMode(quiet) {
+  mgMode = 'normal';
+  mgPicking.clear();
+  document.getElementById('mgMergeBtn').classList.remove('on');
+  document.getElementById('mgUnmergeBtn').classList.remove('on');
+  document.getElementById('mgHint').innerHTML = '💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。';
+  if (!quiet) renderMgCells();
+}
+
+function toggleMergeMode() {
+  if (mgMode === 'merge') { exitMgMode(true); renderMgCells(); return; }
+  mgMode = 'merge'; mgPicking.clear();
+  document.getElementById('mgMergeBtn').classList.add('on');
+  document.getElementById('mgUnmergeBtn').classList.remove('on');
+  document.getElementById('mgHint').innerHTML = '💡 点击选择要合并的货道（需<b>左右相邻</b>，支持多选多对），再次点击可取消；选好后点底部<b>「合并所选」</b>。';
+  renderMgCells();
+}
+
+function toggleUnmergeMode() {
+  if (mgMode === 'unmerge') { exitMgMode(true); renderMgCells(); return; }
+  mgMode = 'unmerge'; mgPicking.clear();
+  document.getElementById('mgUnmergeBtn').classList.add('on');
+  document.getElementById('mgMergeBtn').classList.remove('on');
+  document.getElementById('mgHint').innerHTML = '💡 点击目标<b>合并组</b>（可多选），再次点击可取消；选好后点底部<b>「取消合并所选」</b>批量拆分。';
+  renderMgCells();
+}
+
+function cancelPick() { exitMgMode(true); renderMgCells(); }
+
+function updateMgBottom() {
+  const pickRow = document.getElementById('mgPickRow');
+  const saveRow = document.getElementById('mgSaveRow');
+  const pickBtn = document.getElementById('mgPickBtn');
+  if (mgMode === 'merge') {
+    const n = mgPicking.size;
+    saveRow.style.display = 'none'; pickRow.style.display = 'flex';
+    pickBtn.textContent = n >= 2 ? '合并所选 (' + n + ')' : '合并所选 (0)';
+    pickBtn.disabled = n < 2;
+  } else if (mgMode === 'unmerge') {
+    const n = mgPicking.size;
+    saveRow.style.display = 'none'; pickRow.style.display = 'flex';
+    pickBtn.textContent = n >= 1 ? '取消合并所选 (' + n + ')' : '取消合并所选 (0)';
+    pickBtn.disabled = n < 1;
+  } else {
+    pickRow.style.display = 'none'; saveRow.style.display = 'block';
+  }
+}
+
+/* ---------- 格子点击 ---------- */
+function mgCellClick(r, c) {
+  const hw = mgHw();
+  const isEmpty = hw[r][c] == null;
+  const gid = findGroupAt(r, c);
+
+  if (mgMode === 'merge') {
+    if (isEmpty) { showToast('物号为空（未映射）的货道不可合并'); return; }
+    if (gid) { showToast('该货道已在合并组内，请先拆组'); return; }
+    const key = r + ',' + c;
+    if (!mgPicking.has(key) && mgPicking.size > 0 && !isMgAdjacent(r, c)) { showToast('只能选择左右相邻的货道进行合并'); return; }
+    if (mgPicking.has(key)) mgPicking.delete(key); else mgPicking.add(key);
+    if (mgPicking.size === 0) { exitMgMode(true); renderMgCells(); return; }
+    document.getElementById('mgHint').innerHTML = '💡 已选 <b>' + mgPicking.size + '</b> 个货道，继续点击选择<b>左右相邻</b>货道（两两配对），再次点击可取消；选好后点底部<b>「合并所选」</b>。';
+    renderMgCells();
+    return;
+  }
+
+  if (mgMode === 'unmerge') {
+    if (!gid) { showToast('该货道未参与合并'); return; }
+    const key = 'g' + gid;
+    if (mgPicking.has(key)) mgPicking.delete(key); else mgPicking.add(key);
+    if (mgPicking.size === 0) { exitMgMode(true); renderMgCells(); return; }
+    document.getElementById('mgHint').innerHTML = '💡 已选 <b>' + mgPicking.size + '</b> 个合并组，继续点击选择（可多选），再次点击可取消；选好后点底部<b>「取消合并所选」</b>。';
+    renderMgCells();
+    return;
+  }
+
+  // normal：先选后合并（直接点货道即进入选择模式）；点已合并组看详情
+  if (gid) { showGroupDetail(gid); return; }
+  if (isEmpty) { showToast('物号为空（未映射）的货道不可合并'); return; }
+  mgMode = 'merge';
+  mgPicking.add(r + ',' + c);
+  document.getElementById('mgMergeBtn').classList.add('on');
+  document.getElementById('mgUnmergeBtn').classList.remove('on');
+  document.getElementById('mgHint').innerHTML = '💡 已选 <b>1</b> 个货道，继续点击选择<b>左右相邻</b>货道（两两配对），再次点击可取消；选好后点底部<b>「合并所选」</b>。';
+  renderMgCells();
+}
+
+function mgConfirm() {
+  if (mgMode === 'merge') { askMerge(); return; }
+  if (mgMode === 'unmerge') { askUnmerge(); return; }
+}
+
+/* ---------- 合并 ---------- */
+function askMerge() {
+  if (mgPicking.size < 2) { showToast('请至少选择 2 个货道'); return; }
+  if (mgPicking.size % 2 !== 0) { showToast('所选货道需为偶数个（两两合并）'); return; }
+  const hw = mgHw();
+  const cells = [...mgPicking].map(k => k.split(',').map(Number)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    if (a[0] !== b[0] || Math.abs(a[1] - b[1]) !== 1) { showToast('两两合并的货道需左右相邻'); return; }
+  }
+  const groupN = cells.length / 2;
+  let rows = '';
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    const v = pickOddHw(hw[a[0]][a[1]], hw[b[0]][b[1]]);
+    rows += '<div class="mg-row"><span>' + rowLabel(a[0]) + a[1] + ' + ' + rowLabel(b[0]) + b[1] + '</span><b>→ ' + v + '</b></div>';
+  }
+  document.getElementById('mgMergeMsg').innerHTML =
+      '<div>所选 <b>' + cells.length + '</b> 个货道将两两合并为 <b>' + groupN + '</b> 组（<b>默认保留奇数物号</b>）：</div>'
+    + '<div class="mg-list">' + rows + '</div>'
+    + '<div class="dlg-note">合并后组内货道物号统一，库存统一扣减，出货时从组内任一货道出货（设备侧逻辑）。</div>';
+  openMask('mgMergeMask');
+}
+
+function doMerge() {
+  const hw = mgHw(), groups = mgGroups();
+  const cells = [...mgPicking].map(k => k.split(',').map(Number)).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (cells.length % 2 !== 0) { closeMask('mgMergeMask'); showToast('所选货道需为偶数个（两两合并）'); return; }
+  let created = 0;
+  for (let i = 0; i < cells.length; i += 2) {
+    const a = cells[i], b = cells[i + 1];
+    if (a[0] !== b[0] || Math.abs(a[1] - b[1]) !== 1) { closeMask('mgMergeMask'); showToast('两两合并的货道需左右相邻'); return; }
+    const v = pickOddHw(hw[a[0]][a[1]], hw[b[0]][b[1]]);
+    const origHw = {};
+    origHw[a[0] + ',' + a[1]] = hw[a[0]][a[1]];
+    origHw[b[0] + ',' + b[1]] = hw[b[0]][b[1]];
+    mgSeq++;
+    groups[mgSeq] = { hw: v, cells: [a, b], origHw: origHw };
+    hw[a[0]][a[1]] = v; hw[b[0]][b[1]] = v;   // 组内物号统一
+    created++;
+  }
+  closeMask('mgMergeMask');
+  exitMgMode(true);
+  renderMgCells();
+  showToast('已生成 ' + created + ' 个合并组（两两合并，默认保留奇数物号）');
+}
+
+/* ---------- 组详情 / 拆组 ---------- */
+function showGroupDetail(gid) {
+  const g = mgGroups()[gid];
+  if (!g) return;
+  const names = g.cells.map(([r, c]) => rowLabel(r) + c).join('、');
+  document.getElementById('mgGroupTitle').textContent = '合并组 #' + gid;
+  document.getElementById('mgGroupMsg').innerHTML =
+      '<div>该组合并了 <b>' + g.cells.length + '</b> 个货道：</div>'
+    + '<div class="mg-list">'
+    +   '<div class="mg-row"><span>包含货道</span><b>' + names + '</b></div>'
+    +   '<div class="mg-row"><span>合并物号</span><b>' + g.hw + '</b></div>'
+    +   '<div class="mg-row"><span>货道数</span><b>' + g.cells.length + ' 个</b></div>'
+    + '</div>'
+    + '<div class="dlg-note">拆组后各货道恢复为合并前的原物号。</div>';
+  pendingUnmergeGids = [gid];
+  openMask('mgGroupMask');
+}
+
+function askUnmerge() {
+  const groups = mgGroups();
+  let valid = [];
+  if (pendingUnmergeGids && pendingUnmergeGids.length) {
+    valid = pendingUnmergeGids.filter(g => groups[g]);
+  } else {
+    valid = [...mgPicking].filter(k => k.indexOf('g') === 0).map(k => Number(k.slice(1))).filter(g => groups[g]);
+  }
+  if (!valid.length) { pendingUnmergeGids = null; showToast('请先选择要取消合并的合并组'); return; }
+  pendingUnmergeGids = valid;
+  document.getElementById('mgUnmergeMsg').innerHTML =
+      '将拆分 <b>' + valid.length + '</b> 个合并组（' + valid.map(g => '#' + g).join('、') + '）：<br>'
+    + '拆分后货道恢复为独立货道，各自使用<b>合并前原物号</b>。';
+  closeMask('mgGroupMask');
+  openMask('mgUnmergeMask');
+}
+
+function doUnmerge() {
+  const gids = pendingUnmergeGids || [];
+  if (!gids.length) return;
+  const groups = mgGroups(), hw = mgHw();
+  let count = 0;
+  gids.forEach(gid => {
+    const g = groups[gid];
+    if (!g) return;
+    g.cells.forEach(([r, c]) => {
+      const orig = g.origHw && g.origHw[r + ',' + c];
+      hw[r][c] = (orig !== undefined && orig !== null) ? orig : defaultHw(r, c);
+    });
+    delete groups[gid];
+    count++;
+  });
+  pendingUnmergeGids = null;
+  closeMask('mgUnmergeMask');
+  exitMgMode(true);
+  renderMgCells();
+  showToast('已拆分 ' + count + ' 个合并组，货道恢复为独立货道');
+}
+
+/* ---------- 保存 ----------
+   dirty 判断：与已保存的合并组比对（拆空所有组也算有效修改）；保存后停留当前页 */
+function mgSave() {
+  const isDirty = JSON.stringify(mergeGroups) !== JSON.stringify(savedMergeGroups);
+  if (!isDirty) { showToast('未做修改，可直接返回'); return; }
+  savedMergeGroups = JSON.parse(JSON.stringify(mergeGroups));
+  let total = 0;
+  for (let i = 0; i < mergeGroups.length; i++) total += Object.keys(mergeGroups[i]).length;
+  showToast('正在推送设备…');
+  setTimeout(() => {
+    showToast('已保存并推送 ' + CABINETS.length + ' 个柜体（合并 ' + total + ' 组）');
+  }, 700);
+}
+
+function openMask(id) { document.getElementById(id).classList.add('show'); }
+function closeMask(id) { document.getElementById(id).classList.remove('show'); }
+
+/* ================= Toast ================= */
+let toastTimer = null;
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* ================= 初始化 ================= */
+renderMgCabTabs();
+renderMgAxis();
+renderMgCells();
+</script>
+
+  <!-- ============ 右侧需求说明面板 ============ -->
+  <div class="req-panel">
+    <div class="req-panel-hd">
+      <span class="req-panel-hd-title">需求说明 — 货道合并（APP 独立页面）</span>
+      <a class="req-download-btn" href="#" onclick="downloadReqMd();return false;" title="下载需求说明 Markdown 文档">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
+        下载需求说明
+      </a>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">版本修订记录</div>
+      <table class="req-tbl">
+        <tr><th style="width:70px">版本</th><th style="width:92px">日期</th><th>修订内容</th></tr>
+        <tr><td><b>v1.0-APP</b> 🆕</td><td>2026-10-10</td><td>货道合并从「货道管理」页的第三个 Tab 中<b>拆出为独立页面</b>：迁移小程序版货道合并全部能力（先选后合并 / 仅左右相邻 / 偶数两两配对 / 保留奇数物号 / origHw 拆组恢复），独立承载柜体 Tab、工具栏、矩阵、底部按钮与三个弹窗</td></tr>
+        <tr><td><b>v1.1-APP</b> 🔧</td><td>2026-10-10</td><td><b>行头与货道映射页统一</b>：原 A/B/C… 字母标签 → 上下两段小矩形「软」（灰底 #ECECEF / 灰字）/「物」（浅蓝底 #E6F1FB / 蓝字），各 26px、同圆角，与格子上软下物一一对应；行标 A~ 仅保留在弹窗文案中作定位</td></tr>
+        <tr><td><b>v1.2-APP</b> 🔧</td><td>2026-10-10</td><td><b>已合并组不再显示右上角货道数角标</b>：合并态仅保留整格绿底 #E5F7EE + 物号绿字 #2BA471，去掉表示组内货道数的数字角标（避免视觉冗余）</td></tr>
+      </table>
+      <p class="req-note">关联：小程序版货道合并见 <code>outputs/机器详情-货道合并.html</code>；APP 货道映射/检测仍为「货道管理」页内的两个 Tab。</p>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">一、页面定位</div>
+      <ul class="req-ul">
+        <li><b>独立页面</b>：货道合并<b>不再</b>作为「货道管理」页的功能 Tab，而是机器详情下的<b>独立入口</b>，拥有自己的顶部导航（标题「货道合并」）</li>
+        <li><b>与货道映射的关系</b>：两者是<b>先后关系</b>而非同页 Tab——先完成货道映射（物号写入），再做货道合并；本页<b>只读</b>物号，不提供编辑（要改物号回货道映射页）</li>
+        <li><b>用途</b>：把多个左右相邻的货道并为一个出售单元，统一物号、统一扣减库存</li>
+        <li>面向运营 / 运维人员；画框 375×812（逻辑像素）</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">二、页面结构</div>
+      <ul class="req-ul">
+        <li><b>顶部导航</b>：返回 + 主页图标、标题「货道合并」、右上角温度（例：-8℃）——<b>无功能 Tab 行</b></li>
+        <li><b>柜体 Tab</b>：主柜（默认）/ 副柜1，蓝 #378ADD 选中态；<b>切柜清空选择</b>；Tab 旁不显示数量/角标</li>
+        <li><b>工具栏（常显）</b>：<b>合并货道</b>（进入选择模式，on 态蓝底）、<b>取消合并</b>（进入拆组选择，on 态蓝底）、右侧「已合并 <b>N</b> 组」</li>
+        <li><b>货道矩阵</b>：沿用 APP 双行结构——<b>上=软号（灰、只读）</b>、<b>下=物号（蓝、只读）</b>；主柜 8×10 = 80 货道，副柜1 6×10 = 60 货道</li>
+        <li><b>行头（🆕 v1.1）</b>：与货道映射页<b>完全同构</b>——每行行头为<b>上下两个小矩形</b>（上「软」灰底 / 下「物」浅蓝底，各 26px、圆角 6px），<b>不显示 A/B/C 字母</b>；<b>静态、不参与选择</b>（本页无"选整层"能力）</li>
+        <li><b>底部按钮</b>：默认「保存」；进入选择模式后变为「取消」+「合并所选 (n)」/「取消合并所选 (n)」</li>
+        <li><b>提示语（hint）</b>随模式切换：normal=操作引导；merge=已选 N 个 + 相邻约束；unmerge=已选 N 组</li>
+        <li><b>三个弹窗</b>：合并确认 / 合并组详情 / 拆组确认</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">三、编号规则</div>
+      <table class="req-tbl">
+        <tr><th>编号</th><th>公式</th><th>主柜 8×10</th><th>副柜1 6×10</th><th>说明</th></tr>
+        <tr><td>软号</td><td>行×10 + 列 + 10</td><td>10 ~ 89</td><td>10 ~ 69</td><td>厂测默认，自动生成、<b>只读</b></td></tr>
+        <tr><td>物号</td><td>行×10 + 列 + 1</td><td>1 ~ 80</td><td>1 ~ 60</td><td>来自货道映射页，<b>本页只读</b>；合并后组内统一为合并物号</td></tr>
+        <tr><td>行标</td><td>A/B/C…</td><td>A ~ H</td><td>A ~ F</td><td>行号从 0 起（A 层 = 行 0），列号 0~9；<b>仅用于弹窗文案定位</b>（如「A0 + A1 → 13」），<b>行头不再显示字母</b>（v1.1 起改为「软/物」双段）</td></tr>
+      </table>
+      <p class="req-note">进入本页时读取设备当前物号（等价于货道映射页保存后的值），软号在任何映射/合并类原型中均不可编辑。</p>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">四、合并规则（与小程序版一致）</div>
+      <ul class="req-ul">
+        <li><b>先选后合并</b>：直接点击货道即进入选择模式并选中该货道（无需先点「合并货道」按钮），继续点击左右相邻货道可多选</li>
+        <li><b>相邻约束</b>：只能选择与已选货道<b>左右相邻（同一行）</b>的货道；点击不相邻货道 toast「只能选择左右相邻的货道进行合并」并拒绝选中</li>
+        <li><b>同柜体约束</b>：仅同一柜体内可合并（矩阵按柜体切换，天然满足）</li>
+        <li><b>两两配对</b>：所选货道需为<b>偶数个</b>，按行、列排序后自动两两配对；奇数个 toast「所选货道需为偶数个（两两合并）」</li>
+        <li><b>统一物号</b>：每组合并后保留<b>奇数物号</b>（如 12+13 → 13）；两个同为奇/同为偶时取<b>左侧</b>（列号小）</li>
+        <li><b>不可合并的情形</b>：物号为空（未映射）的货道 → toast「物号为空（未映射）的货道不可合并」；已在合并组内的货道 → toast「该货道已在合并组内，请先拆组」</li>
+        <li><b>合并确认弹窗</b>：展示每对「A0 + A1 → 物号」的配对结果，确认后生效</li>
+        <li>全部取消选择后<b>自动退出</b>选择模式，回到默认态</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">五、拆组（取消合并）</div>
+      <ul class="req-ul">
+        <li><b>单组入口</b>：默认态点击已合并格子 → 弹出<b>合并组详情</b>（包含货道 / 合并物号 / 货道数）→ 点「拆分组」</li>
+        <li><b>批量入口</b>：点「取消合并」进入拆组选择模式，可多选合并组 → 底部「取消合并所选 (n)」</li>
+        <li><b>恢复原物号</b>：拆组后各货道按 <code>origHw</code> 记录恢复为<b>合并前原物号</b>（不是默认值）；无记录时回退默认物号（行×10+列+1）</li>
+        <li>拆空所有合并组也<b>算有效修改</b>，可正常保存（表达"删除合并"意图）</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">六、保存与推送</div>
+      <ul class="req-ul">
+        <li>点保存 → 与已保存快照比对；<b>无修改</b>时 toast「未做修改，可直接返回」并阻断</li>
+        <li>有修改 → 先 toast「正在推送设备…」，成功提示「已保存并推送 2 个柜体（合并 N 组）」（N 为全部柜体合并组总数）</li>
+        <li><b>保存后停留当前页</b>，不自动返回；真实环境需校验设备在线（离线提示「设备离线，请稍后重试」）</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">七、视觉规范</div>
+      <table class="req-tbl">
+        <tr><th>元素 / 状态</th><th>样式</th><th>说明</th></tr>
+        <tr><td>已合并组</td><td>整格绿底 <b>#E5F7EE</b> + 物号绿字 <b>#2BA471</b></td><td>绿色=合并语义，与"映射修改黄"区分；<b>不再显示组内货道数角标</b></td></tr>
+        <tr><td>合并选择中</td><td>蓝边（2px #378ADD）+ 物号浅蓝底 #E6F1FB</td><td>沿用 APP 蓝主色</td></tr>
+        <tr><td>拆组候选</td><td>红边（2px #F55252）+ 物号浅红底 #FFEBEB</td><td>红色=拆组语义</td></tr>
+        <tr><td>物号为空</td><td>浅灰底 #FAFAFA + 灰虚线边框（空值态）</td><td>与映射页一致</td></tr>
+        <tr><td>软号</td><td>灰字 #8E8E93，只读（任何模式均不可编辑）</td><td>合并组内软号底随整格转浅绿</td></tr>
+        <tr><td><b>行头「软」段</b> 🆕</td><td>灰底 <b>#ECECEF</b> + 灰字 #8E8E93，10px 加粗，高 26px</td><td>与货道映射页行头一致</td></tr>
+        <tr><td><b>行头「物」段</b> 🆕</td><td>浅蓝底 <b>#E6F1FB</b> + 蓝字 #378ADD，10px 加粗，高 26px</td><td>与货道映射页行头一致；本页不参与选择</td></tr>
+        <tr><td>主按钮</td><td>蓝 #378ADD 大圆角「保存」</td><td>与货道管理页一致</td></tr>
+        <tr><td>画框</td><td>375×812 逻辑像素</td><td>项目统一尺寸</td></tr>
+      </table>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">八、验收标准</div>
+      <ul class="req-ul">
+        <li>页面为独立入口：导航标题「货道合并」，无功能 Tab 行</li>
+        <li>主柜 8×10（软 10~89）、副柜1 6×10（软 10~69），双行上软下物</li>
+        <li><b>行头为上下两段「软」(灰) /「物」(浅蓝) 小矩形</b>，与货道映射页完全一致，且不含 A/B/C 字母</li>
+        <li>直接点货道进入选择模式；选不相邻货道被拒绝并 toast</li>
+        <li>选 2 个相邻货道 → 底部按钮变「合并所选 (2)」，弹窗展示「A0 + A1 → 奇数物号」，确认后生成 1 个合并组（绿色，不显示货道数角标）</li>
+        <li>奇数个选择被拦截；已合并货道再次合并被拦截；空物号货道不可合并</li>
+        <li>点已合并格子 → 组详情 → 拆分组 → 恢复原物号（12 与 13 各回各自原值）</li>
+        <li>「取消合并」模式可多选组批量拆分</li>
+        <li>切柜 / 全部取消选择 → 退出选择模式并清空选中</li>
+        <li>未做修改点保存 → toast「未做修改，可直接返回」；有修改 → 推送提示且停留在当前页</li>
+        <li>本页物号不可编辑（点击不弹输入框）</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">九、待确认 / 待补充</div>
+      <ul class="req-ul">
+        <li><b>入口位置</b>：本页从机器详情哪个入口进入（与「货道映射」并列？或在映射页内提供跳转按钮），待业务确认</li>
+        <li><b>合并是否仅限两两</b>：当前与小程序一致仅支持两两配对；若业务需要 3 个及以上货道并为一组，需另行确认统一物号规则与标识含义</li>
+        <li><b>物号为空是否拦截入页</b>：当前在物号为空时拒绝合并该货道；是否改为"必须先完成映射才能进入本页"，待业务确认</li>
+        <li><b>合并后的库存与出货</b>：原型仅作提示，"组内库存统一扣减、出货时从组内任一货道出货"由设备侧实现，需与固件确认</li>
+        <li><b>保存推送流程</b>：是否沿用既有「推送进度 toast + 失败重试」；离线/权限边界复用机器详情约定</li>
+        <li><b>副柜数量</b>：当前 1 个副柜1（6×10=60）；如有副柜2+，Tab 横向扩展即可，规则同副柜1</li>
+      </ul>
+    </div>
+
+    <div class="req-section">
+      <div class="req-h">十、本次修改明细（v1.1 → v1.2）</div>
+      <table class="req-tbl">
+        <tr><th style="width:24%">项目</th><th style="width:30%">v1.1（变更前）</th><th style="width:38%">v1.2（本次）</th><th style="width:8%">类型</th></tr>
+        <tr><td>已合并组角标</td><td>合并格右上角显示数字角标（如 <b>2</b>），表示组内货道数</td><td><b>取消角标</b>，合并态仅保留整格绿底 #E5F7EE + 物号绿字 #2BA471</td><td>🔧</td></tr>
+        <tr><td>视觉信息</td><td>颜色 + 角标共同表达"合并"及数量</td><td><b>颜色 alone 表达合并语义</b>，数量通过组内格子的个数直接可见</td><td>🔧</td></tr>
+        <tr><td>行头（v1.1 已上线）</td><td>—</td><td>保持上下两段「软/物」小矩形，与映射页一致</td><td>—</td></tr>
+        <tr><td>合并 / 拆组 / 保存规则</td><td>—</td><td>完全不变</td><td>—</td></tr>
+      </table>
+      <p class="req-note">🆕 = 本次新增；🔧 = 本次调整/变更；— = 保持不变。</p>
+    </div>
+  </div>
+
+</div><!-- end page-wrapper -->
+<script>
+function downloadReqMd(){
+  var src = document.getElementById('reqMdSource');
+  var text = src ? src.textContent : "";
+  var blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = '货道合并-APP需求说明.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
