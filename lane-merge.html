@@ -60,27 +60,35 @@ body { min-height: 100vh; padding: 0; }
 .feat-icon { width: 32px; height: 32px; background: #FFF6E8; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #EF9F27; }
 .feat-label { font-size: 11px; color: #222; text-align: center; }
 
-/* 货道合并矩阵（复用货道映射矩阵视觉） */
+/* 货道合并矩阵（与货道映射页同构：上=软号 / 下=物号） */
 .matrix-wrap { padding: 12px; flex: 1; overflow: auto; }
 .matrix-hint { font-size: 11px; color: #888; margin-bottom: 8px; padding: 0 4px; line-height: 1.6; }
 .matrix-hint b { color: #EF9F27; font-weight: 600; }
-.matrix { display: grid; grid-template-columns: 26px repeat(10, 1fr); gap: 3px; background: #fff; border-radius: 12px; padding: 10px; font-size: 11px; }
-.m-head { font-weight: 600; color: #888; text-align: center; padding: 5px 0; font-size: 11px; }
-.m-head.x { color: #EF9F27; }
-.m-head.y { color: #EF9F27; }
-.m-cell { background: #F5F5F7; border-radius: 4px; padding: 6px 0; text-align: center; color: #222; font-size: 11px; cursor: pointer; position: relative; transition: background .15s, box-shadow .15s; }
-.m-cell:active { background: #E8E8EA; }
-.m-cell.empty { background: transparent; cursor: default; }
-.m-cell.empty::after { content: '+'; color: #d0d0d0; font-size: 14px; font-weight: 400; }
-/* 选中态（合并选择中） */
-.m-cell.picking { box-shadow: 0 0 0 2px #EF9F27 inset; background: #FFF6E8; color: #EF9F27; font-weight: 600; }
-/* 已合并态（绿色系，与映射的"修改黄"区分） */
-.m-cell.merged { background: #E5F7EE; color: #2BA471; font-weight: 600; }
-.m-cell.merged::after { content: attr(data-cnt); position: absolute; top: 1px; right: 2px; font-size: 8px; font-weight: 700; color: #fff; background: #2BA471; border-radius: 4px; padding: 0 3px; line-height: 11px; font-family: monospace; }
-.m-cell.merged.picking { box-shadow: 0 0 0 2px #EF9F27 inset; }
-/* 拆组候选态（取消合并模式点选已合并组） */
-.m-cell.unmerge-tgt { box-shadow: 0 0 0 2px #F55252 inset; background: #FFEBEB; color: #F55252; font-weight: 600; }
-.m-axis { display: flex; align-items: center; justify-content: center; color: #EF9F27; font-weight: 600; font-size: 12px; }
+.matrix { background: #fff; border-radius: 12px; padding: 10px; font-size: 11px; }
+.lane-body { display: flex; gap: 4px; align-items: flex-start; }
+/* 行头：上下两段「软」(灰) /「物」(橙)，与格子上软下物一一对应，静态不可点 */
+.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.ra .seg.sw { background: #ECECEF; color: #8E8E93; }
+.ra .seg.gw { background: #FFF3E0; color: #EF9F27; }
+.cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: start; }
+/* 格子：上=软号（灰·自动生成只读）/ 下=物号（橙）；合并态整格转绿 */
+.mx { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; cursor: pointer; position: relative; background: #fff; }
+.mx .sw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; background: #F5F5F7; }
+.mx .gw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #EF9F27; background: #fff; border-top: 1px solid #F0F0F2; transition: background .12s; }
+.mx .gw.empty { color: #d0d0d0; font-weight: 400; }
+.mx .gw.empty::after { content: '+'; font-size: 13px; }
+/* 选中态（合并选择中）：橙边 + 浅黄物号底 */
+.mx.picking { outline: 2px solid #EF9F27; outline-offset: -2px; }
+.mx.picking .gw { background: #FFF6E8; }
+/* 已合并态：整格绿底绿字 */
+.mx.merged .sw { background: #E5F7EE; color: #2BA471; }
+.mx.merged .gw { background: #E5F7EE; color: #2BA471; border-top-color: #CDEEDD; }
+/* 拆组候选态（取消合并模式点选已合并组）：红边 + 浅红底 */
+.mx.unmerge-tgt { outline: 2px solid #F55252; outline-offset: -2px; }
+.mx.unmerge-tgt .sw { background: #FFEBEB; }
+.mx.unmerge-tgt .gw { background: #FFEBEB; color: #F55252; }
 
 .matrix-toolbar { display: flex; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; align-items: center; }
 .mt-btn { padding: 6px 12px; font-size: 12px; background: #fff; border: 1px solid #EF9F27; color: #EF9F27; border-radius: 16px; cursor: pointer; transition: all .15s; }
@@ -213,7 +221,7 @@ body { min-height: 100vh; padding: 0; }
             <span class="mt-stat">已合并 <b id="cMergeCount">0</b> 组</span>
           </div>
           <div class="matrix-wrap">
-            <div class="matrix-hint" id="cHint">💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。</div>
+            <div class="matrix-hint" id="cHint">💡 上=<b>软号</b>（灰·只读）/ 下=<b>物号</b>（橙）；直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。</div>
             <div class="matrix" id="cMatrix"></div>
           </div>
           <div class="bottom-bar">
@@ -287,7 +295,7 @@ body { min-height: 100vh; padding: 0; }
         <div class="req-h">二、货道合并</div>
         <ul class="req-ul">
           <li><strong>入口</strong>：机器详情 → 全部功能 → 货道合并（绿色 ⧉ 图标区分于映射）</li>
-          <li><strong>矩阵</strong>：沿用货道映射矩阵（A~J 层 × 0~9 列），格内显示物号（演示数据 11~110 递增，A0=11、J9=110）；已合并货道以<strong>绿色块 + 右上角货道数角标</strong>标识</li>
+          <li><strong>矩阵（🆕 双行·上软下物）</strong>：与货道映射页同构——每格<strong>上下两段</strong>，上段=软号（灰底灰字，自动生成·只读）、下段=物号（橙字），演示数据物号 11~110 递增（A0=11、J9=110）；<strong>去掉顶部 0~9 列号头</strong>，行头改为上下两个小矩形「软」（灰）/「物」（橙），<strong>静态不可点</strong>；已合并货道以<strong>整格绿底</strong>标识（不再显示右上角货道数角标）</li>
           <li><strong>合并流程（先选后合并 · 两两配对）</strong>：在矩阵上<strong>直接点选货道</strong>进入选择模式（橙色选中框）→ 点选货道（<strong>仅左右相邻，支持一次多选多对</strong>）→ 底部出现「取消」+「合并所选 (N)」→ 点「合并所选」→ 确认弹窗列出<strong>每对的合并结果（默认保留奇数物号）</strong>→ 确认后生成多个两两合并组；工具栏「合并货道」仅作辅助入口，主入口为直接点选</li>
           <li><strong>相邻约束</strong>：只能选择与已选货道<strong>左右相邻（同一行）</strong>的货道继续合并；点击不相邻货道时 toast 提示「只能选择左右相邻的货道进行合并」并拒绝选中</li>
           <li><strong>两两合并</strong>：合并时按所选顺序<strong>自动两两配对</strong>（如 A 行选 11~20，合并为 11、13、15、17、19 五组）；所选货道数为奇数时提示「所选货道需为偶数个（两两合并）」；每组合并后<strong>默认保留奇数物号</strong>（如 12+13 → 13）</li>
@@ -440,7 +448,7 @@ function exitMode(quiet) {
   picking.clear();
   document.getElementById('cMergeBtn').classList.remove('on');
   document.getElementById('cUnmergeBtn').classList.remove('on');
-  document.getElementById('cHint').innerHTML = '💡 直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。';
+  document.getElementById('cHint').innerHTML = '💡 上=<b>软号</b>（灰·只读）/ 下=<b>物号</b>（橙）；直接点击货道即可<b>多选</b>（需<b>左右相邻</b>）；合并时<b>自动两两配对</b>（默认保留<b>奇数物号</b>），点<b>保存</b>推送设备生效。';
   if (!quiet) renderMatrix(cCurCab);
 }
 /* 「合并货道」：仅作为进入选择模式的辅助入口（主要入口=直接点格子） */
@@ -475,26 +483,28 @@ function renderMatrix(cabId) {
   const groups = mergeGroups[cabId] || {};
   const m = document.getElementById('cMatrix');
   const cols = cab.cols, rows = cab.rows;
-  const letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  // 行头：上下两段「软」(灰) /「物」(橙)，与格子上软下物一一对应；静态不参与选择
+  let rh = '';
+  for (let r = 0; r < rows; r++) rh += '<div class="ra"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
   let h = '';
-  h += '<div class="m-axis"></div>';
-  for (let c = 0; c < cols; c++) h += `<div class="m-head x">${c}</div>`;
   for (let r = 0; r < rows; r++) {
-    h += `<div class="m-head y">${letters[r]}</div>`;
     for (let c = 0; c < cols; c++) {
       const v = mat[r][c];
       const isEmpty = (v === '' || v === null || v === undefined);
       const gid = findGroupAt(groups, r, c);
+      const swNum = 10 + r * 10 + c;   // 软号 = 起始编号(10) + 行×10 + 列，自动生成·只读
       let cls = '';
-      let cnt = '';
-      if (gid) { cls = ' merged'; cnt = groups[gid].cells.length; }
+      if (gid) cls += ' merged';
       if (cMode === 'merge' && picking.has(r + ',' + c)) cls += ' picking';
       if (cMode === 'unmerge' && gid && picking.has('g' + gid)) cls += ' unmerge-tgt';
-      const extra = gid ? ` data-gid="${gid}"` : '';
-      h += `<div class="m-cell${cls}${isEmpty ? ' empty' : ''}" data-r="${r}" data-c="${c}"${extra} data-cnt="${cnt || ''}" onclick="cellClick(${r},${c})">${isEmpty ? '' : (gid ? groups[gid].hw : v)}</div>`;
+      const val = gid ? groups[gid].hw : (isEmpty ? '' : v);
+      h += `<div class="mx${cls}" data-r="${r}" data-c="${c}" onclick="cellClick(${r},${c})">`
+         +   `<div class="sw">${swNum}</div>`
+         +   `<div class="gw${isEmpty ? ' empty' : ''}">${val}</div>`
+         + '</div>';
     }
   }
-  m.innerHTML = h;
+  m.innerHTML = '<div class="lane-body"><div class="row-axis">' + rh + '</div><div class="cells">' + h + '</div></div>';
   document.getElementById('cMergeCount').textContent = groupCount(cabId);
   updateBottomBtn();
 }
