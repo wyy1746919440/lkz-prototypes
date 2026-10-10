@@ -143,6 +143,15 @@ body { min-height: 100vh; padding: 0; }
 .req-ul li:last-child { border-bottom: none; }
 .req-ul li::before { content: ''; position: absolute; left: 4px; top: 16px; width: 6px; height: 6px; background: #EF9F27; border-radius: 50%; }
 .req-ul li strong { color: #fff; font-weight: 600; margin-right: 4px; }
+.req-ver { display: inline-block; font-size: 11px; font-weight: 500; color: #EF9F27; border: 1px solid #EF9F27; border-radius: 8px; padding: 0 7px; margin-left: 8px; vertical-align: middle; }
+.req-note { font-size: 12px; color: #888; line-height: 1.8; margin-bottom: 10px; }
+.req-note strong { color: #fff; }
+.req-tbl { width: 100%; border-collapse: collapse; font-size: 12px; color: #b0b0b0; margin-top: 6px; }
+.req-tbl th { background: #383838; color: #fff; font-weight: 600; text-align: left; padding: 7px 8px; border: 1px solid #3a3a3a; }
+.req-tbl td { padding: 7px 8px; border: 1px solid #3a3a3a; line-height: 1.65; vertical-align: top; }
+.req-tbl td strong { color: #fff; }
+.req-sub { font-size: 13px; font-weight: 600; color: #fff; margin: 14px 0 6px; }
+.req-sub:first-child { margin-top: 0; }
 
 /* toast */
 .toast { position: fixed; left: 50%; top: 80px; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
@@ -281,7 +290,7 @@ body { min-height: 100vh; padding: 0; }
     <!-- ============ 右侧需求说明 ============ -->
     <div class="req-panel">
       <div class="req-panel-hd">
-        <span class="req-panel-hd-title">需求说明 — 机器详情（货道合并）</span>
+        <span class="req-panel-hd-title">需求说明 — 机器详情（货道合并）<span class="req-ver">v2.0</span></span>
         <a class="req-download-btn" href="机器详情-货道合并-需求说明.md" download title="下载详细需求说明 Markdown 文档">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
           下载详细需求说明
@@ -295,7 +304,7 @@ body { min-height: 100vh; padding: 0; }
         <div class="req-h">二、货道合并</div>
         <ul class="req-ul">
           <li><strong>入口</strong>：机器详情 → 全部功能 → 货道合并（绿色 ⧉ 图标区分于映射）</li>
-          <li><strong>矩阵（🆕 双行·上软下物）</strong>：与货道映射页同构——每格<strong>上下两段</strong>，上段=软号（灰底灰字，自动生成·只读）、下段=物号（橙字），演示数据物号 11~110 递增（A0=11、J9=110）；<strong>去掉顶部 0~9 列号头</strong>，行头改为上下两个小矩形「软」（灰）/「物」（橙），<strong>静态不可点</strong>；已合并货道以<strong>整格绿底</strong>标识（不再显示右上角货道数角标）</li>
+          <li><strong>矩阵</strong>：沿用货道映射矩阵（A~J 层 × 0~9 列），格内显示物号（演示数据 11~110 递增，A0=11、J9=110）；已合并货道以<strong>绿色块 + 右上角货道数角标</strong>标识</li>
           <li><strong>合并流程（先选后合并 · 两两配对）</strong>：在矩阵上<strong>直接点选货道</strong>进入选择模式（橙色选中框）→ 点选货道（<strong>仅左右相邻，支持一次多选多对</strong>）→ 底部出现「取消」+「合并所选 (N)」→ 点「合并所选」→ 确认弹窗列出<strong>每对的合并结果（默认保留奇数物号）</strong>→ 确认后生成多个两两合并组；工具栏「合并货道」仅作辅助入口，主入口为直接点选</li>
           <li><strong>相邻约束</strong>：只能选择与已选货道<strong>左右相邻（同一行）</strong>的货道继续合并；点击不相邻货道时 toast 提示「只能选择左右相邻的货道进行合并」并拒绝选中</li>
           <li><strong>两两合并</strong>：合并时按所选顺序<strong>自动两两配对</strong>（如 A 行选 11~20，合并为 11、13、15、17、19 五组）；所选货道数为奇数时提示「所选货道需为偶数个（两两合并）」；每组合并后<strong>默认保留奇数物号</strong>（如 12+13 → 13）</li>
@@ -322,6 +331,52 @@ body { min-height: 100vh; padding: 0; }
           <li>权限点：lane_merge:view / edit / push</li>
           <li>进入 / 合并 / 拆分 / 保存推送 / 失败重试均需记录操作日志</li>
         </ul>
+      </div>
+      <div class="req-section">
+        <div class="req-h">五、本次修改内容（v1 → v2）</div>
+        <p class="req-note">版本 <strong>v2.0</strong>（2026-10-10）｜<strong>第一～四章保留 v1 原文未改写</strong>，本次全部变更集中在本章。变更原因：<strong>小程序端矩阵形态对齐 APP 端</strong>。</p>
+        <div class="req-sub">一句话结论</div>
+        <p class="req-note">矩阵由「单格只显示物号 + 顶部 0~9 列号头 + A~J 字母行头 + 合并角标」改为「<strong>每格上下两段（上软号只读 / 下物号）+ 无列号头 + 行头为「软」「物」两小矩形 + 无角标</strong>」。合并 / 拆组 / 保存等<strong>业务规则全部不变</strong>。</p>
+        <div class="req-sub">变更对照表</div>
+        <table class="req-tbl">
+          <tr><th style="width:22%">变更项</th><th style="width:26%">v1（变更前）</th><th style="width:44%">v2（变更后）</th><th style="width:8%">类型</th></tr>
+          <tr><td><strong>矩阵格子结构</strong></td><td>单格，只显示物号</td><td><strong>上下两段</strong>：上 = 软号（灰底 <code>#F5F5F7</code> / 灰字 <code>#8E8E93</code>，自动生成·<strong>只读</strong>）、下 = 物号（白底橙字 <code>#EF9F27</code>），与货道映射页同构</td><td>🔧</td></tr>
+          <tr><td><strong>顶部列号头</strong></td><td>矩阵顶部一行 <code>0~9</code> 列号</td><td><strong>删除</strong>，不再渲染</td><td>🔧</td></tr>
+          <tr><td><strong>行头形态</strong></td><td>单格字母 <code>A~J</code>（A 层 = 行 0）</td><td><strong>上下两个小矩形</strong>：上「软」（灰底 <code>#ECECEF</code>）、下「物」（橙底 <code>#FFF3E0</code>），不带字母、<strong>静态不可点</strong>（本页无"选整层"）</td><td>🔧</td></tr>
+          <tr><td><strong>合并组角标</strong></td><td>已合并格右上角数字角标（组内货道数）</td><td><strong>删除角标</strong>；合并态仅保留<strong>整格绿底</strong> <code>#E5F7EE</code> + 物号绿字 <code>#2BA471</code></td><td>🔧</td></tr>
+          <tr><td><strong>软号取值规则</strong></td><td>无软号概念</td><td>🆕 <strong>软号 = <code>10 + 行×10 + 列</code></strong>，各柜独立（主柜 A0 = 软 10、J9 = 软 109）；系统自动生成，<strong>任何模式不可编辑</strong>，不参与合并计算</td><td>🆕</td></tr>
+          <tr><td><strong>矩阵提示语</strong></td><td>「直接点击货道即可多选（需左右相邻）…」</td><td>「每格<strong>上=软号（自动生成·只读）</strong>、<strong>下=物号</strong>；直接点击货道即可多选（需左右相邻）…」</td><td>🔧</td></tr>
+        </table>
+        <div class="req-sub">软号 / 物号对照（主柜）</div>
+        <table class="req-tbl">
+          <tr><th style="width:20%">位置</th><th style="width:20%">行 / 列</th><th style="width:30%">软号</th><th style="width:30%">物号（演示数据）</th></tr>
+          <tr><td>A0</td><td>0 / 0</td><td>10</td><td>11</td></tr>
+          <tr><td>A1</td><td>0 / 1</td><td>11</td><td>12</td></tr>
+          <tr><td>B0</td><td>1 / 0</td><td>20</td><td>21</td></tr>
+          <tr><td>J9</td><td>9 / 9</td><td>109</td><td>110</td></tr>
+        </table>
+        <div class="req-sub">开发自查清单</div>
+        <ul class="req-ul">
+          <li>矩阵渲染改为<strong>双行 DOM</strong>（一个容器内上下两段），删除单格结构</li>
+          <li><strong>删除列号头</strong>渲染分支（原 <code>m-head.x</code>）</li>
+          <li>行头改为<strong>上下两个小矩形</strong>，移除字母 A~J 渲染，行头<strong>不绑定 click</strong></li>
+          <li>删除 <code>data-cnt</code> 属性与 <code>.merged::after</code> 角标样式</li>
+          <li>新增软号计算 <code>soft = 10 + row * 10 + col</code>，<strong>各柜独立</strong>；软号段不绑定点击编辑</li>
+          <li>合并态只保留整格绿底 + 物号绿字</li>
+        </ul>
+        <div class="req-sub">明确未变更（避免误改）</div>
+        <ul class="req-ul">
+          <li>业务规则：同柜体内合并、仅左右相邻、偶数两两配对、默认保留奇数物号、<code>origHw</code> 拆组恢复原物号、批量拆组</li>
+          <li>保存推送：dirty 比对、无修改提示「未做修改，可直接返回」、保存后停留当前页、逐柜进度与失败重试</li>
+          <li>权限点、操作日志、离线阻断；选择态橙框 / 拆组候选红框语义色</li>
+        </ul>
+        <div class="req-sub">与 APP 版仍存在的差异（本次未对齐，待确认）</div>
+        <table class="req-tbl">
+          <tr><th style="width:24%">差异点</th><th style="width:38%">小程序版（本页）</th><th style="width:38%">APP 版</th></tr>
+          <tr><td>合并是否改写物号矩阵</td><td><strong>不改写</strong>底层矩阵，仅记 <code>mergeGroups[gid].hw</code> 在渲染层统一显示；拆组按 <code>origHw</code> 回滚</td><td><code>doMerge()</code> <strong>真实改写</strong>两格物号</td></tr>
+          <tr><td>物号取值范围</td><td>全局递增（主柜 11~110、副柜 111~170）</td><td>每柜独立 <code>1 + 行×10 + 列</code></td></tr>
+          <tr><td>主色</td><td>橙 <code>#EF9F27</code>（小程序规范）</td><td>蓝 <code>#378ADD</code>（APP 规范），保持各端规范不统一</td></tr>
+        </table>
       </div>
     </div>
 
