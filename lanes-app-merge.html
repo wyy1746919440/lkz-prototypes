@@ -67,9 +67,16 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 /* ===== 矩阵 ===== */
 .mg-scroll { flex: 1; overflow-y: auto; padding: 10px 10px 90px; }
 .mg-body { display: flex; gap: 4px; }
-.mg-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-/* 行头：与货道映射页一致——上下两段「软」(灰) /「物」(蓝)，与格子上软下物一一对应 */
-.mg-ax { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+/* 顶部列号头：0~9（与矩阵列一一对应） */
+.mg-head { display: flex; gap: 4px; margin-bottom: 4px; }
+.mg-head-axis { width: 34px; flex-shrink: 0; }
+.mg-head-cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.mg-head-cell { font-size: 10px; font-weight: 600; color: #8E8E93; text-align: center; line-height: 14px; }
+.mg-axis { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+/* 行头：左侧行标字母（A/B/C…）+ 上下两段「软」(灰) /「物」(蓝)，与格子上软下物一一对应 */
+.mg-ax { display: flex; align-items: stretch; gap: 3px; flex-shrink: 0; }
+.mg-ax .lbl { width: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #8E8E93; }
+.mg-ax .segs { flex: 1; display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
 .mg-ax .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
 .mg-ax .seg.sw { background: #ECECEF; color: #8E8E93; }
 .mg-ax .seg.gw { background: #E6F1FB; color: #378ADD; }
@@ -125,7 +132,7 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 <script id="reqMdSource" type="text/plain">
 # 货道合并需求说明 — 海外 APP（独立页面）
 
-> 版本：**v1.3-APP** ｜ 日期：2026-10-10 ｜ 关联原型：`货道管理-app/货道合并.html`（海外 APP 端 · 375×812）
+> 版本：**v1.4-APP** ｜ 日期：2026-10-26 ｜ 关联原型：`货道管理-app/货道合并.html`（海外 APP 端 · 375×812）
 > 同源：小程序版货道合并（见 `outputs/机器详情-货道合并.html`）；APP「货道管理」页 v1.4-APP 起不再承载合并 Tab
 
 ---
@@ -150,9 +157,11 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 ├─────────────────────────┤
 │ [合并货道][取消合并] 已合并 N 组 │  工具栏（常显）
 ├─────────────────────────┤
-│      [软][物][软][物] ...    │  行头：上「软」下「物」（与格子对应）
-│      [软][物][软][物] ...    │  矩阵：上=软号（灰只读）
-│       ...                │        下=物号（蓝，只读）
+│     0  1  2  3  4 ...  9  │  顶部列号头（与列一一对应）
+├─────────────────────────┤
+│   A [软][物][软][物] ...    │  行头：左字母 + 上「软」下「物」
+│   B [软][物][软][物] ...    │  矩阵：上=软号（灰只读）
+│   C  ...                  │        下=物号（蓝，只读）
 │                           │  主柜 8×10 / 副柜1 6×10
 ├─────────────────────────┤
 │  💡 提示语（随模式切换）      │
@@ -179,8 +188,11 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 ### 2.4 货道矩阵
 - **上 = 软号**（灰字 `#8E8E93`、灰底 `#F2F2F7`，只读）；**下 = 物号**（蓝字 `#378ADD`，本页只读）。
 - 主柜 8 层 × 10 列 = 80 货道；副柜1 6 层 × 10 列 = 60 货道。
-- **行头**：每行行头为**上下两个小矩形**——上段「软」（灰底 `#ECECEF` / 灰字 `#8E8E93`）、下段「物」（浅蓝底 `#E6F1FB` / 蓝字 `#378ADD`），各 26px、圆角 6px、10px 加粗，**与格子的上软下物一一对应**。
-- **行头不显示 A/B/C 字母**，也不参与选择；行标 A~ **仅用于内部公式换算**，界面与弹窗文案改用**软号定位**（如「软号 10 + 软号 11 → 物号 13」）。
+- **顶部列号头**：矩阵上方一行显示列号 **0 ~ 9**（10px 加粗灰字 `#8E8E93`，居中，与列一一对应）；行头位置留空占位。
+- **行头（每行）** = **左侧行标字母** + **上下两个小矩形**：
+  - 左侧字母：`A/B/C…`（主柜 A~H、副柜1 A~F，10px 加粗灰字 `#8E8E93`，宽 12px，垂直居中覆盖整行高度），**仅供定位、不参与选择**。
+  - 上下两个小矩形：上段「软」（灰底 `#ECECEF` / 灰字 `#8E8E93`）、下段「物」（浅蓝底 `#E6F1FB` / 蓝字 `#378ADD`），各 26px、圆角 6px、10px 加粗，**与格子的上软下物一一对应**。
+- 行标 A~ 与列号 0~9 **仅用于内部公式换算与界面定位**，弹窗文案仍用**软号定位**（如「软号 10 + 软号 11 → 物号 13」）。
 
 ### 2.5 底部按钮
 - 默认态：单个大圆角蓝按钮「保存」。
@@ -204,7 +216,7 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 | -- | -- | -- | -- | -- |
 | 软号 | `行×10 + 列 + 10` | 10 ~ 89 | 10 ~ 69 | 厂测模板默认，自动生成、**只读** |
 | 物号 | `行×10 + 列 + 1` | 1 ~ 80 | 1 ~ 60 | 来自货道映射页，**本页只读**；合并后组内统一为合并物号 |
-| 行标 | A/B/C… | A ~ H | A ~ F | 行号从 0 起（A 层 = 行 0），列号 0~9；**仅用于内部公式换算**，界面与弹窗改用软号定位，行头不显示字母 |
+| 行标 | A/B/C… | A ~ H | A ~ F | 行号从 0 起（A 层 = 行 0），列号 0~9；行头左侧显示字母、矩阵顶部显示列号，**仅用于定位与内部公式换算**，弹窗文案改用软号定位 |
 
 - 进入本页时读取设备当前物号（等价于货道映射页保存后的值）。
 - 软号在任何映射 / 合并类原型中均不可编辑。
@@ -259,6 +271,8 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 | 拆组候选 | 红边 2px `#F55252` + 物号浅红底 `#FFEBEB` | 红色 = 拆组语义 |
 | 物号为空 | 浅灰底 `#FAFAFA` + 灰虚线边框 | 与货道映射页一致 |
 | 软号 | 灰字 `#8E8E93`、灰底 `#F2F2F7`，任何模式均不可编辑 | 合并组内软号底随整格转浅绿 |
+| 行头 · 左侧字母 | 灰字 `#8E8E93`，10px 加粗，宽 12px，垂直居中 | 仅定位用，**不参与选择** |
+| 列号头 | 灰字 `#8E8E93`，10px 加粗，居中，位于矩阵上方 | 0 ~ 9，与列一一对应；行头位置留空占位 |
 | 行头 · 上段「软」 | 灰底 `#ECECEF` + 灰字 `#8E8E93`，10px 加粗，高 26px，圆角 6px | 与格子上段同高、同圆角 |
 | 行头 · 下段「物」 | 浅蓝底 `#E6F1FB` + 蓝字 `#378ADD`，10px 加粗，高 26px，圆角 6px | 与格子下段同高、同圆角；不参与选择 |
 | 主按钮 | 蓝 `#378ADD` 大圆角「保存」 | 与货道管理页一致 |
@@ -270,7 +284,8 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 
 - [ ] 页面为独立入口：导航标题「货道合并」，**无功能 Tab 行**。
 - [ ] 主柜 8×10（软号 10~89）、副柜1 6×10（软号 10~69），双行上软下物。
-- [ ] **行头为上「软」下「物」两个小矩形**，与格子上下两段一一对齐，**不显示 A/B/C 字母**。
+- [ ] **行头 = 左侧行标字母（A~H / A~F）+ 上「软」下「物」两个小矩形**，与格子上下两段一一对齐。
+- [ ] 矩阵顶部显示**列号头 0~9**，与列一一对应。
 - [ ] 直接点货道即进入选择模式；选不相邻货道被拒绝并 toast。
 - [ ] 选 2 个相邻货道 → 底部按钮变「合并所选 (2)」，弹窗展示「**软号 10 + 软号 11 → 物号 13**」，确认后生成 1 个合并组（**绿色，无货道数角标**）。
 - [ ] 每次合并固定为左右相邻的 2 个货道；奇数个选择被拦截。
@@ -313,6 +328,11 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
     </div>
 
     <div class="mg-scroll">
+      <!-- 顶部列号头 0~9 -->
+      <div class="mg-head">
+        <div class="mg-head-axis"></div>
+        <div class="mg-head-cells" id="mgHeadCells"></div>
+      </div>
       <div class="mg-body">
         <div class="mg-axis" id="mgAxis"></div>
         <div class="mg-cells" id="mgCells"></div>
@@ -423,15 +443,25 @@ function switchMgCab(i) {
   if (i === curMgCab) return;
   curMgCab = i;
   exitMgMode(true);          // 切柜清空选择（选中按柜体维度）
-  renderMgCabTabs(); renderMgAxis(); renderMgCells();
+  renderMgCabTabs(); renderMgHead(); renderMgAxis(); renderMgCells();
+}
+
+function renderMgHead() {
+  const cab = mgCabCfg();
+  let h = '';
+  for (let c = 0; c < cab.cols; c++) h += '<div class="mg-head-cell">' + c + '</div>';
+  document.getElementById('mgHeadCells').innerHTML = h;
 }
 
 function renderMgAxis() {
   const cab = mgCabCfg();
   let h = '';
-  // 行头与货道映射页同构：上段「软」(灰) / 下段「物」(浅蓝)，各 26px，与格子上软下物对齐
+  // 行头 = 左侧行标字母（A/B/C…）+ 上下两段「软」(灰) /「物」(浅蓝)，各 26px，与格子上软下物对齐
   for (let r = 0; r < cab.rows; r++) {
-    h += '<div class="mg-ax"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
+    h += '<div class="mg-ax">'
+       +   '<div class="lbl">' + String.fromCharCode(65 + r) + '</div>'
+       +   '<div class="segs"><div class="seg sw">软</div><div class="seg gw">物</div></div>'
+       + '</div>';
   }
   document.getElementById('mgAxis').innerHTML = h;
 }
@@ -703,6 +733,7 @@ function showToast(m) {
 
 /* ================= 初始化 ================= */
 renderMgCabTabs();
+renderMgHead();
 renderMgAxis();
 renderMgCells();
 </script>
@@ -711,7 +742,7 @@ renderMgCells();
   <!-- ============ 右侧需求说明面板 ============ -->
   <div class="req-panel">
     <div class="req-panel-hd">
-      <span class="req-panel-hd-title">需求说明 — 货道合并（APP 独立页面）<span class="req-ver">v1.3-APP</span></span>
+      <span class="req-panel-hd-title">需求说明 — 货道合并（APP 独立页面）<span class="req-ver">v1.4-APP</span></span>
       <a class="req-download-btn" href="#" onclick="downloadReqMd();return false;" title="下载需求说明 Markdown 文档">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
         下载需求说明
@@ -735,7 +766,8 @@ renderMgCells();
         <li><b>柜体 Tab</b>：主柜（默认）/ 副柜1，蓝 #378ADD 选中态；<b>切柜清空选择</b>；Tab 旁不显示数量/角标。后续如有副柜2+，Tab 横向扩展，<b>规则与副柜1 完全一致</b></li>
         <li><b>工具栏（常显）</b>：<b>合并货道</b>（进入选择模式，on 态蓝底）、<b>取消合并</b>（进入拆组选择，on 态蓝底）、右侧「已合并 <b>N</b> 组」</li>
         <li><b>货道矩阵</b>：<b>上=软号（灰、只读）</b>、<b>下=物号（蓝、只读）</b>；主柜 8×10 = 80 货道，副柜1 6×10 = 60 货道</li>
-        <li><b>行头</b>：每行一个<b>上下两段小矩形</b>——上「软」（灰底 #ECECEF / 灰字 #8E8E93）、下「物」（浅蓝底 #E6F1FB / 蓝字 #378ADD），各 26px、圆角 6px、10px 加粗，<b>与格子上软下物一一对应</b>；<b>不显示 A/B/C 字母</b>，也不参与选择</li>
+        <li><b>顶部列号头</b>：矩阵上方一行显示列号 <b>0~9</b>（10px 加粗灰字，居中，与列一一对应），行头位置留空占位</li>
+        <li><b>行头</b>：每行 = <b>左侧行标字母</b>（A/B/C…，主柜 A~H、副柜1 A~F，10px 加粗灰字，垂直居中，仅供定位、不参与选择）+ <b>上下两段小矩形</b>——上「软」（灰底 #ECECEF / 灰字 #8E8E93）、下「物」（浅蓝底 #E6F1FB / 蓝字 #378ADD），各 26px、圆角 6px、10px 加粗，<b>与格子上软下物一一对应</b></li>
         <li><b>底部按钮</b>：默认「保存」；进入选择模式后变为「取消」+「合并所选 (n)」/「取消合并所选 (n)」</li>
         <li><b>提示语（hint）</b>随模式切换：normal=操作引导；merge=已选 N 个 + 相邻约束；unmerge=已选 N 组</li>
         <li><b>三个弹窗</b>：合并确认 / 合并组详情 / 拆组确认</li>
@@ -748,7 +780,7 @@ renderMgCells();
         <tr><th>编号</th><th>公式</th><th>主柜 8×10</th><th>副柜1 6×10</th><th>说明</th></tr>
         <tr><td>软号</td><td>行×10 + 列 + 10</td><td>10 ~ 89</td><td>10 ~ 69</td><td>厂测默认，自动生成、<b>只读</b></td></tr>
         <tr><td>物号</td><td>行×10 + 列 + 1</td><td>1 ~ 80</td><td>1 ~ 60</td><td>来自货道映射页，<b>本页只读</b>；合并后组内统一为合并物号</td></tr>
-        <tr><td>行标</td><td>A/B/C…</td><td>A ~ H</td><td>A ~ F</td><td>行号从 0 起（A 层 = 行 0），列号 0~9；<b>仅用于内部公式换算</b>，弹窗文案改用软号定位（如「软号 10 + 软号 11 → 物号 13」），行头不显示字母</td></tr>
+        <tr><td>行标</td><td>A/B/C…</td><td>A ~ H</td><td>A ~ F</td><td>行号从 0 起（A 层 = 行 0），列号 0~9；行头左侧显示字母、矩阵顶部显示列号，<b>仅用于定位与内部公式换算</b>，弹窗文案改用软号定位（如「软号 10 + 软号 11 → 物号 13」）</td></tr>
       </table>
       <p class="req-note">进入本页时读取设备当前物号（等价于货道映射页保存后的值），软号在任何映射/合并类原型中均不可编辑。</p>
     </div>
@@ -797,6 +829,8 @@ renderMgCells();
         <tr><td>拆组候选</td><td>红边（2px #F55252）+ 物号浅红底 #FFEBEB</td><td>红色 = 拆组语义</td></tr>
         <tr><td>物号为空</td><td>浅灰底 #FAFAFA + 灰虚线边框（空值态）</td><td>与映射页一致</td></tr>
         <tr><td>软号</td><td>灰字 #8E8E93、灰底 #F2F2F7，只读（任何模式均不可编辑）</td><td>合并组内软号底随整格转浅绿</td></tr>
+        <tr><td>行头 · 左侧字母</td><td>灰字 <b>#8E8E93</b>，10px 加粗，宽 12px，垂直居中</td><td>仅定位用，<b>不参与选择</b></td></tr>
+        <tr><td>列号头</td><td>灰字 <b>#8E8E93</b>，10px 加粗，居中，位于矩阵上方</td><td>0 ~ 9，与列一一对应；行头位置留空占位</td></tr>
         <tr><td>行头 · 上段「软」</td><td>灰底 <b>#ECECEF</b> + 灰字 <b>#8E8E93</b>，10px 加粗，高 26px，圆角 6px</td><td>与格子上段同高、同圆角</td></tr>
         <tr><td>行头 · 下段「物」</td><td>浅蓝底 <b>#E6F1FB</b> + 蓝字 <b>#378ADD</b>，10px 加粗，高 26px，圆角 6px</td><td>与格子下段同高、同圆角；不参与选择</td></tr>
         <tr><td>主按钮</td><td>蓝 #378ADD 大圆角「保存」</td><td>与货道管理页一致</td></tr>
@@ -809,7 +843,8 @@ renderMgCells();
       <ul class="req-ul">
         <li>页面为独立入口：导航标题「货道合并」，无功能 Tab 行</li>
         <li>主柜 8×10（软 10~89）、副柜1 6×10（软 10~69），双行上软下物</li>
-        <li><b>行头为上「软」下「物」两个小矩形</b>，与格子上下两段一一对齐，<b>不显示 A/B/C 字母</b></li>
+        <li><b>行头 = 左侧行标字母（A~H / A~F）+ 上「软」下「物」两个小矩形</b>，与格子上下两段一一对齐</li>
+        <li>矩阵顶部显示<b>列号头 0~9</b>，与列一一对应</li>
         <li>直接点货道进入选择模式；选不相邻货道被拒绝并 toast</li>
         <li>选 2 个相邻货道 → 底部按钮变「合并所选 (2)」，弹窗展示「软号 10 + 软号 11 → 物号 13」，确认后生成 1 个合并组（<b>绿色，无货道数角标</b>）</li>
         <li>每次合并<b>固定为左右相邻的 2 个货道</b>；奇数个选择被拦截</li>
