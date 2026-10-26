@@ -157,6 +157,8 @@ body{background:#1e1e1e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
 .tbl-group td{border-bottom:none}
 .tbl-group:last-child td{border-bottom:none}
 .tbl-row-tag{width:26px;text-align:center;vertical-align:top;background:transparent;padding:2px 0 3px}
+/* 行标字母列（A~，带底色，用于定位第几层） */
+.mt-row-lbl{display:block;margin:2px auto 4px;width:18px;height:16px;line-height:16px;border-radius:4px;background:#ECECEF;color:#8E8E93;font-size:10px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;text-align:center}
 /* 行头：与格子同构的上下两个独立小矩形（上软蓝字/下物橙字），中间留缝 */
 .rt-box{background:transparent;height:60px;padding:0;display:flex;flex-direction:column;gap:5px;cursor:pointer}
 .rt-box .rt-sw{display:block;box-sizing:border-box;height:27px;line-height:25px;border:1px solid #F0E2C0;border-radius:6px;background:#FFF6E8;font-size:11px;font-weight:600;color:#378ADD}
@@ -972,7 +974,7 @@ function renderMatrix(){
   for(let r=0;r<cab().rowConfigs.length;r++){
     const cnt=cab().rowConfigs[r].count;
     html+='<tr class="tbl-group">';
-    html+='<td class="tbl-row-tag" onclick="selectRow('+r+')"><div class="rt-box"><span class="rt-sw">软</span><span class="rt-hw">物</span></div></td>';
+    html+='<td class="tbl-row-tag" onclick="selectRow('+r+')"><span class="mt-row-lbl">'+String.fromCharCode(65+r)+'</span><div class="rt-box"><span class="rt-sw">软</span><span class="rt-hw">物</span></div></td>';
     for(let c=0;c<cnt;c++){
       const sw=getSwAt(r,c),hw=getHwAt(r,c),same=sw===hw,sel=selected.has(r+','+c);
       const cls='tbl-pair'+(same?' same':'')+(sel?' sel':'');
