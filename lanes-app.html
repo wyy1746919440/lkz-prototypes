@@ -60,9 +60,16 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 /* ===== 矩阵区 ===== */
 .lane-scroll { flex: 1; overflow-y: auto; padding: 10px 10px 90px; }
 .lane-body { display: flex; gap: 4px; }
-/* 行头：上下两段「软」(蓝) /「物」(橙)，与格子上软下物一一对应 */
-.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+/* 顶部列号头：0~9（带底色，与矩阵列一一对应） */
+.lane-head { display: flex; gap: 4px; margin-bottom: 4px; }
+.lane-head-axis { width: 34px; flex-shrink: 0; }
+.lane-head-cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.lane-head-cell { font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; text-align: center; line-height: 16px; }
+/* 行头：左侧行标字母（A~，带底色）+ 上下两段「软」(蓝) /「物」(橙)，与格子上软下物一一对应 */
+.row-axis { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; align-items: stretch; gap: 3px; cursor: pointer; flex-shrink: 0; }
+.ra .lbl { width: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; }
+.ra .segs { flex: 1; display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
 .ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
 .ra .seg.sw { background: #ECECEF; color: #8E8E93; }
 .ra .seg.gw { background: #E6F1FB; color: #378ADD; }
@@ -100,6 +107,28 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
 /* ===== Toast ===== */
 .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(17,17,17,.85); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 10px; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80%; text-align: center; }
 .toast.show { opacity: 1; }
+
+/* ===== 货道编号编辑弹窗（底部弹出） ===== */
+.edit-mask { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 60; display: none; align-items: flex-end; justify-content: center; }
+.edit-mask.show { display: flex; }
+.edit-sheet { background: #fff; width: 100%; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,.16); animation: appSheetUp .26s ease-out; overflow: hidden; }
+@keyframes appSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.edit-hd { padding: 14px 16px 10px; font-size: 16px; font-weight: 600; color: #111; text-align: center; position: relative; border-bottom: 1px solid #f0f0f2; }
+.edit-close { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #999; padding: 4px 8px; cursor: pointer; line-height: 1; }
+.edit-bd { padding: 12px 14px 4px; }
+.edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #F7F8FA; border-radius: 10px; padding: 11px 14px; margin-bottom: 8px; }
+.edit-k { font-size: 13px; color: #888; flex-shrink: 0; }
+.edit-v { font-size: 15px; font-weight: 600; color: #222; }
+.edit-v.ro { color: #8E8E93; background: #ECECEF; border-radius: 6px; padding: 3px 12px; }
+.edit-input { flex: 1; max-width: 150px; height: 34px; border: 1px solid #378ADD; border-radius: 8px; padding: 0 10px; font-size: 15px; font-weight: 600; color: #378ADD; outline: none; text-align: right; background: #fff; -webkit-appearance: none; -moz-appearance: textfield; }
+.edit-input::-webkit-outer-spin-button, .edit-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.edit-input.err { border-color: #F55252; color: #F55252; }
+.edit-tip { font-size: 11px; color: #999; line-height: 1.7; padding: 0 2px 6px; }
+.edit-tip b { color: #378ADD; }
+.edit-ft { display: flex; gap: 10px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #f0f0f2; }
+.edit-ft button { flex: 1; height: 42px; border-radius: 21px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.edit-ft .cancel { background: #fff; border: 1px solid #dcdce0; color: #444; }
+.edit-ft .ok { background: #378ADD; border: 1px solid #378ADD; color: #fff; }
 </style>
 <script id="reqMdSource" type="text/plain">
 # 货道管理（货道映射）需求说明 — 海外 APP
@@ -336,11 +365,15 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
     </div>
 
     <div class="lane-scroll">
+      <div class="lane-head">
+        <div class="lane-head-axis"></div>
+        <div class="lane-head-cells" id="colHead"></div>
+      </div>
       <div class="lane-body">
         <div class="row-axis" id="rowAxis"></div>
         <div class="cells" id="cells"></div>
       </div>
-      <div class="hint">上=软号（自动生成）· 下=物号；点击物号可就地修改（同层后续货道自动递增），点击软号或行头选中后可批量操作</div>
+      <div class="hint">A-0为货道列号，代表货道第一行第几列；软件编号为货道软件编号，为客户选择使用的编号；物理编号代表硬件编号，为点击接线口逻辑；</div>
     </div>
 
     <!-- 保存条 -->
@@ -358,6 +391,23 @@ body { background: #3a3a3e; min-height: 100vh; padding: 24px; font-family: -appl
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- 货道编号编辑弹窗（底部）：货道列号 / 软件编号 / 物理编号，仅物理编号可编辑 -->
+  <div class="edit-mask" id="editMask" onclick="if(event.target===this)closeEdit()">
+    <div class="edit-sheet">
+      <div class="edit-hd">编辑货道编号<span class="edit-close" onclick="closeEdit()">✕</span></div>
+      <div class="edit-bd">
+        <div class="edit-row"><span class="edit-k">货道列号</span><span class="edit-v ro" id="edPos">A-0</span></div>
+        <div class="edit-row"><span class="edit-k">软件编号</span><span class="edit-v ro" id="edSw">10</span></div>
+        <div class="edit-row"><span class="edit-k">物理编号</span><input class="edit-input" id="edHw" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="999" placeholder="请输入物理编号"></div>
+        <div class="edit-tip">仅<b>物理编号</b>可修改（对应点击接线口逻辑）；<b>软件编号</b>由系统自动生成、不可编辑。确认后同层后续货道自动递增（只影响本层，不跨层）。</div>
+      </div>
+      <div class="edit-ft">
+        <button class="cancel" onclick="closeEdit()">取消</button>
+        <button class="ok" onclick="submitEdit()">确定</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -408,12 +458,18 @@ function switchCab(i) {
 /* ================= 渲染 ================= */
 function renderAxis() {
   const cab = curCabCfg();
+  // 顶部列号头：0~9（带底色，与矩阵列一一对应）
+  let hh = '';
+  for (let c = 0; c < cab.cols; c++) hh += '<div class="lane-head-cell">' + c + '</div>';
+  document.getElementById('colHead').innerHTML = hh;
   const rowAxis = document.getElementById('rowAxis');
   let rh = '';
   for (let r = 0; r < cab.rows; r++) {
-    // 行头上下两段：软(灰) / 物(蓝)，点行头选整层；无货道的层不渲染
+    // 行头：左侧行标字母（A~，带底色）+ 上下两段 软(灰) / 物(蓝)，点行头选整层；无货道的层不渲染
+    const letter = String.fromCharCode(65 + r);
     rh += '<div class="ra" id="ra' + r + '" onclick="selectRow(' + r + ')">'
-       +    '<div class="seg sw">软</div><div class="seg gw">物</div>'
+       +    '<div class="lbl">' + letter + '</div>'
+       +    '<div class="segs"><div class="seg sw">软</div><div class="seg gw">物</div></div>'
        +  '</div>';
   }
   rowAxis.innerHTML = rh;
@@ -457,33 +513,51 @@ function toggleCell(r, c) {
   renderCells();
 }
 
-/* ================= 单格就地编辑 =================
-   点击物号半格 → 变输入框；确认后该层后续货道自动递增（只影响本层，不跨层） */
+/* ================= 物理编号编辑（底部弹窗） =================
+   点击物号半格 / 空格 → 底部弹窗展示「货道列号 / 软件编号 / 物理编号」，
+   仅物理编号可编辑（软件编号自动生成只读）；确认后该层后续货道自动递增（只影响本层，不跨层） */
+let editCtx = null; // { r, c }
+
 function editCell(r, c) {
-  const gw = document.querySelector('#cells .cell[data-r="' + r + '"][data-c="' + c + '"] .gw');
-  if (!gw || gw.querySelector('input')) return;
   const hw = curHw();
-  const cur = hw[r][c];
-  gw.classList.add('editing');
-  gw.innerHTML = '<input type="number" inputmode="numeric" pattern="[0-9]*" value="' + (cur == null ? '' : cur) + '">';
-  const input = gw.querySelector('input');
-  input.focus();
-  setTimeout(() => { try { input.select(); } catch (e) {} }, 30);
-  const finish = (revert) => {
-    if (revert) { renderCells(); return; }
-    const raw = input.value.trim();
+  const cab = curCabCfg();
+  editCtx = { r, c };
+  document.getElementById('edPos').textContent = cab.name + ' · ' + String.fromCharCode(65 + r) + '-' + c;
+  document.getElementById('edSw').textContent = curSw()[r][c];
+  const input = document.getElementById('edHw');
+  input.classList.remove('err');
+  input.value = (hw[r][c] == null ? '' : hw[r][c]);
+  document.getElementById('editMask').classList.add('show');
+  setTimeout(() => { try { input.focus(); input.select(); } catch (e) {} }, 280);
+}
+
+function closeEdit() {
+  document.getElementById('editMask').classList.remove('show');
+  editCtx = null;
+}
+
+function submitEdit() {
+  if (!editCtx) { closeEdit(); return; }
+  const { r, c } = editCtx;
+  const hw = curHw();
+  const input = document.getElementById('edHw');
+  const raw = (input.value || '').trim();
+  if (raw === '') {
+    hw[r][c] = null; // 置空（虚线空格态）
+  } else {
     const n = parseInt(raw, 10);
-    if (raw === '' || isNaN(n) || n < 1) { showToast('请输入 1~999 的物号'); input.focus(); return; }
-    hw[r][c] = Math.min(n, 999);
+    if (isNaN(n) || n < 1 || n > 999) {
+      input.classList.add('err');
+      showToast('请输入 1~999 的物理编号');
+      return;
+    }
+    input.classList.remove('err');
+    hw[r][c] = n;
     // 该层后续货道自动递增：new(c+1)=n+1, new(c+2)=n+2 …（只影响本层）
-    for (let c2 = c + 1; c2 < curCabCfg().cols; c2++) hw[r][c2] = Math.min(hw[r][c] + (c2 - c), 999);
-    renderCells();
-  };
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-    if (e.key === 'Escape') { e.preventDefault(); finish(true); }
-  });
-  input.addEventListener('blur', () => finish(false), { once: true });
+    for (let c2 = c + 1; c2 < curCabCfg().cols; c2++) hw[r][c2] = Math.min(n + (c2 - c), 999);
+  }
+  closeEdit();
+  renderCells();
 }
 
 function selectRow(r) {
