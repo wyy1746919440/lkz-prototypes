@@ -173,6 +173,17 @@ body { min-height: 100vh; padding: 0; }
 .modal-footer { padding: 10px 12px; background: #fff; border-top: 1px solid #f0f0f0; display: flex; gap: 10px; }
 .modal-footer .btn { flex: 1; height: 40px; font-size: 14px; border-radius: 20px; }
 
+/* 货道编号编辑弹窗（底部弹出：货道列号 / 软件编号 / 物理编号，仅物理编号可编辑） */
+.lane-edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.lane-edit-k { font-size: 13px; color: #888; flex-shrink: 0; }
+.lane-edit-v { font-size: 15px; font-weight: 600; color: #222; }
+.lane-edit-v.ro { color: #8E8E93; background: #ECECEF; border-radius: 6px; padding: 3px 12px; font-weight: 600; }
+.lane-edit-input { flex: 1; max-width: 150px; height: 34px; border: 1px solid #EF9F27; border-radius: 8px; padding: 0 10px; font-size: 15px; font-weight: 600; color: #EF9F27; outline: none; text-align: right; background: #fff; -webkit-appearance: none; -moz-appearance: textfield; }
+.lane-edit-input::-webkit-outer-spin-button, .lane-edit-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lane-edit-input.err { border-color: #F55252; color: #F55252; }
+.lane-edit-tip { font-size: 11px; color: #999; line-height: 1.7; padding: 2px 2px 4px; }
+.lane-edit-tip b { color: #EF9F27; }
+
 /* 居中弹窗（保存/推送/成功/失败） */
 .center-mask { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: center; justify-content: center; }
 .center-mask.show { display: flex; }
@@ -213,15 +224,22 @@ body { min-height: 100vh; padding: 0; }
 .matrix-hint { font-size: 11px; color: #888; margin-bottom: 8px; padding: 0 4px; }
 .matrix-hint b { color: #EF9F27; font-weight: 600; }
 .matrix { font-size: 11px; }
-/* 行头：上下两段「软」(灰) /「物」(橙)，点行头选中/取消整层 */
+/* 顶部列号头：0~9（带底色，与矩阵列一一对应） */
+.lane-head { display: flex; gap: 4px; margin-bottom: 4px; }
+.lane-head-axis { width: 34px; flex-shrink: 0; }
+.lane-head-cells { flex: 1; display: grid; gap: 4px; }
+.lane-head-cell { font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; text-align: center; line-height: 16px; }
+/* 行头：左侧行标字母（A~，带底色）+ 上下两段「软」(灰) /「物」(橙)，点行头选中/取消整层 */
 .lane-body { display: flex; gap: 4px; }
-.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.row-axis { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; align-items: stretch; gap: 3px; flex-shrink: 0; }
+.ra .lbl { width: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; }
+.ra .segs { flex: 1; display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
 .ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
 .ra .seg.sw { background: #ECECEF; color: #8E8E93; }
 .ra .seg.gw { background: #FFF3E0; color: #EF9F27; }
 .cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-content: start; }
-/* 格子：上=软号（灰，自动生成只读，点击=选中）/ 下=物号（橙，点击=就地编辑） */；类名用 .mx 避免与详情列表 .cell 冲突
+/* 格子：上=软件编号（灰，自动生成只读）/ 下=物理编号（橙，点击=底部弹窗编辑） */；类名用 .mx 避免与详情列表 .cell 冲突
 .mx { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
 .mx .sw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #8E8E93; background: #F5F5F7; cursor: pointer; }
 .mx .gw { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #EF9F27; background: #fff; border-top: 1px solid #F0F0F2; cursor: pointer; transition: background .12s; }
@@ -388,11 +406,41 @@ body { min-height: 100vh; padding: 0; }
             <span class="mt-stat">已修改 <b id="bModifyCount">0</b> 项</span>
           </div>
           <div class="matrix-wrap">
-            <div class="matrix-hint">💡 上<b>软号</b>（灰·自动生成只读）下<b>物号</b>（橙）：点击物号可<b>单独编辑</b>（同层后续货道自动递增）；未在矩阵中显示的空格，点击"+ 号"可补填。各柜体映射独立编辑。</div>
+            <div class="matrix-hint">💡 A-0为货道列号，代表货道第一行第几列；软件编号为货道软件编号，为客户选择使用的编号；物理编号代表硬件编号，为点击接线口逻辑；</div>
             <div class="matrix" id="bMatrix"></div>
           </div>
           <div class="bottom-bar">
             <button class="btn btn-primary" onclick="bSave()">保存</button>
+          </div>
+        </div>
+
+        <!-- 货道编号编辑弹窗（底部）：货道列号 / 软件编号 / 物理编号，仅物理编号可编辑 -->
+        <div class="modal-mask" id="bEditModal">
+          <div class="modal-sheet" style="max-height:60%">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+              <span class="modal-title" id="bEditTitle">编辑货道编号</span>
+              <span class="modal-close" onclick="closeModal('bEditModal')">✕</span>
+            </div>
+            <div class="modal-body">
+              <div class="lane-edit-row">
+                <span class="lane-edit-k">货道列号</span>
+                <span class="lane-edit-v ro" id="bEditPos">A-0</span>
+              </div>
+              <div class="lane-edit-row">
+                <span class="lane-edit-k">软件编号</span>
+                <span class="lane-edit-v ro" id="bEditSw">10</span>
+              </div>
+              <div class="lane-edit-row">
+                <span class="lane-edit-k">物理编号</span>
+                <input class="lane-edit-input" id="bEditHw" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="999" placeholder="请输入物理编号">
+              </div>
+              <div class="lane-edit-tip">仅<b>物理编号</b>可修改（对应点击接线口逻辑）；<b>软件编号</b>由系统自动生成、不可编辑。确认后同层后续货道自动递增（只影响本层，不跨层）。</div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" onclick="closeModal('bEditModal')">取消</button>
+              <button class="btn btn-primary" onclick="bSubmitEdit()">确定</button>
+            </div>
           </div>
         </div>
 
@@ -439,7 +487,7 @@ body { min-height: 100vh; padding: 0; }
           <div class="center-dialog">
             <div class="status-icon warn">⚠</div>
             <div class="center-dialog-title">确认清空所有映射？</div>
-            <div class="center-dialog-msg" style="line-height:1.7">清空后所有货道物号置空，需逐格重新配置。<br>尚未保存的修改也会一起丢失。</div>
+            <div class="center-dialog-msg" style="line-height:1.7">清空后所有货道物理编号置空，需逐格重新配置。<br>尚未保存的修改也会一起丢失。</div>
             <div class="center-dialog-actions">
               <button class="btn btn-secondary" onclick="closeModal('bClearConfirm')">取消</button>
               <button class="btn btn-primary" onclick="bConfirmClear()">确认清空</button>
@@ -467,7 +515,7 @@ body { min-height: 100vh; padding: 0; }
 <p class="req-p">有屏机器详情补齐<strong>货道映射</strong>与<strong>货道检测</strong>两项能力，与无屏机器对齐；货道映射支持「选模板 → 本地预览 → 保存生效」，货道检测支持单个 / 整层 / 整柜并覆盖主柜副柜。</p>
 </div><div class="req-section">
   <div class="req-h">二、货道映射</div>
-<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道映射</li><li><strong>柜体 Tab</strong>：主柜 / 副柜1… 各自独立矩阵；修改数量统一在工具栏右侧「已修改 N 项」展示，Tab 不显示角标、右上角不显示柜体总览</li><li><strong>矩阵展示（上软下物）</strong>：每格双行——上=软号（<b>灰色</b>，自动生成·只读，软号 = 起始编号 10 + 行×10 + 列）/ 下=物号（<b>橙色</b>，可编辑）；无 0~9 列号表头；左侧行头为上下两段「软」(灰)/「物」(橙)，与格子同构</li><li><strong>单格就地编辑</strong>：点击<b>物号</b>半格 → 变输入框（数字键盘），Enter/失焦确认、Esc 取消；输入 1~999；<b>确认后同层后续货道自动递增</b>（= 新值+1、+2…，只影响本层不跨层），递增格标修改态；物号 ≠ 默认物号时黄底（已修改）；空格点「+」可补填</li><li><strong>配置货道映射（模板应用）</strong>：工具栏「配置货道映射」打开模板选择弹窗（按当前柜体规格过滤模板，支持名称搜索、展开全部层预览）；点「应用」仅本地预览覆盖当前柜体映射，点「保存」后才推送生效；模板与柜体规格不一致时弹出警告，可取消或强制应用</li><li><strong>保存推送</strong>：点「保存」后才真正推送设备；<b>按柜体逐个推送</b>（主柜 → 副柜1 → …），顶部黄条 toast 展示逐柜进度，失败可重试；<b>保存后停留当前货道映射页，不自动返回</b>（用户手动点左上角返回）；「清空本柜」二次确认且仅清当前柜体</li></ul>
+<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道映射</li><li><strong>柜体 Tab</strong>：主柜 / 副柜1… 各自独立矩阵；修改数量统一在工具栏右侧「已修改 N 项」展示，Tab 不显示角标、右上角不显示柜体总览</li><li><strong>矩阵展示（上软下物）</strong>：每格双行——上=软件编号（<b>灰色</b>，自动生成·只读，软件编号 = 起始编号 10 + 行×10 + 列）/ 下=物理编号（<b>橙色</b>，可编辑）；<b>顶部带 0~9 列号头（灰底）</b>、<b>左侧带行标字母 A~（灰底）</b>，两者均有底色，用于定位；左侧行头为行标字母 + 上下两段「软」(灰)/「物」(橙)，与格子同构</li><li><strong>物理编号编辑（底部弹窗）</strong>：点击<b>物理编号</b>半格或空格「+」→ 底部弹出编辑弹窗，展示<b>货道列号（如 A-0）</b>、<b>软件编号（只读）</b>、<b>物理编号（唯一可编辑项）</b>；物理编号输入 1~999，点「确定」生效；<b>确认后同层后续货道自动递增</b>（= 新值+1、+2…，只影响本层不跨层），递增格标修改态；物理编号 ≠ 默认物号时黄底（已修改）；空格点「+」可补填</li><li><strong>配置货道映射（模板应用）</strong>：工具栏「配置货道映射」打开模板选择弹窗（按当前柜体规格过滤模板，支持名称搜索、展开全部层预览）；点「应用」仅本地预览覆盖当前柜体映射，点「保存」后才推送生效；模板与柜体规格不一致时弹出警告，可取消或强制应用</li><li><strong>保存推送</strong>：点「保存」后才真正推送设备；<b>按柜体逐个推送</b>（主柜 → 副柜1 → …），顶部黄条 toast 展示逐柜进度，失败可重试；<b>保存后停留当前货道映射页，不自动返回</b>（用户手动点左上角返回）；「清空本柜」二次确认且仅清当前柜体</li></ul>
 </div><div class="req-section">
   <div class="req-h">三、货道检测</div>
 <ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道检测</li><li><strong>检测维度</strong>：单个货道（点格子）/ 整层（点「检测整层」）/ 整柜（点「检测整机」）</li><li><strong>柜体支持</strong>：主柜、副柜均支持；切换 Tab 后矩阵与状态按新柜体刷新</li><li><strong>状态流转</strong>：检测中（黄色闪烁）→ 正常（绿）/ 故障（红/橙）；检测中格子禁止重复触发</li><li><strong>结果展示</strong>：底部实时显示选中货道编号与状态；超时（&gt;15s 无回执）标记故障并 toast 提示</li></ul>
@@ -975,12 +1023,19 @@ function renderMatrix(cabId) {
   const mat = deviceMatrix[cabId];
   const m = document.getElementById('bMatrix');
   const cols = cab.cols, rows = cab.rows;
-  // 行头：上下两段「软」(灰) /「物」(橙)
+  // 顶部列号头：0 ~ cols-1（带底色，与矩阵列一一对应）
+  let hh = '';
+  for (let c = 0; c < cols; c++) hh += '<div class="lane-head-cell">' + c + '</div>';
+  const head = '<div class="lane-head"><div class="lane-head-axis"></div>'
+             + '<div class="lane-head-cells" style="grid-template-columns:repeat(' + cols + ',1fr)">' + hh + '</div></div>';
+  // 行头：左侧行标字母（A~，带底色）+ 上下两段「软」(灰) /「物」(橙)
   let rh = '';
   for (let r = 0; r < rows; r++) {
-    rh += '<div class="ra"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
+    const letter = String.fromCharCode(65 + r);
+    rh += '<div class="ra"><div class="lbl">' + letter + '</div>'
+       +  '<div class="segs"><div class="seg sw">软</div><div class="seg gw">物</div></div></div>';
   }
-  // 格子：上=软号（灰，自动生成只读）/ 下=物号（橙，点击=就地编辑）
+  // 格子：上=软件编号（灰，自动生成只读）/ 下=物理编号（橙，点击=底部弹窗编辑）
   let h = '';
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -996,7 +1051,9 @@ function renderMatrix(cabId) {
          +  '</div>';
     }
   }
-  m.innerHTML = '<div class="lane-body"><div class="row-axis">' + rh + '</div><div class="cells">' + h + '</div></div>';
+  m.innerHTML = head
+    + '<div class="lane-body"><div class="row-axis">' + rh + '</div>'
+    + '<div class="cells" style="grid-template-columns:repeat(' + cols + ',1fr)">' + h + '</div></div>';
   updateModifyStat();
 }
 
@@ -1019,40 +1076,52 @@ function updateModifyStat() {
   renderCabTabs();
 }
 
-/* ================= 单格就地编辑 =================
-   点击物号半格 → 变输入框；确认后该层后续货道自动递增（只影响本层，不跨层） */
+/* ================= 物理编号编辑（底部弹窗） =================
+   点击物号半格 / 空格「+」→ 底部弹窗展示「货道列号 / 软件编号 / 物理编号」，
+   仅物理编号可编辑（软件编号自动生成只读）；确认后同层后续货道自动递增（只影响本层，不跨层） */
+let bEditCtx = null;   // { cabId, r, c }
+
 function bEditCell(cabId, r, c) {
-  const gw = document.querySelector('#bMatrix .mx[data-r="' + r + '"][data-c="' + c + '"] .gw');
-  if (!gw || gw.querySelector('input')) return;
+  const cab = deviceCabinets.find(x => x.id === cabId);
+  const letter = String.fromCharCode(65 + r);
+  const swNum = 10 + r * 10 + c;
   const cur = deviceMatrix[cabId][r][c];
-  gw.classList.remove('empty', 'modified');
-  gw.classList.add('editing');
-  gw.innerHTML = `<input type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="999" value="${cur === '' ? '' : cur}">`;
-  const input = gw.querySelector('input');
-  input.focus();
-  setTimeout(() => { try { input.select(); } catch(e){} }, 30);
-  const finish = (revert) => {
-    if (revert) { renderMatrix(cabId); return; }
-    const raw = input.value.trim();
-    if (raw === '') {
-      deviceMatrix[cabId][r][c] = '';
-    } else {
-      const num = parseInt(raw, 10);
-      if (isNaN(num) || num < 1) { showToast('请输入 1~999 的物号'); input.focus(); return; }
-      deviceMatrix[cabId][r][c] = Math.min(num, 999);
-      // 同层后续货道自动递增：new(c+1)=n+1、new(c+2)=n+2 …（只影响本层）
-      const cab = deviceCabinets.find(x => x.id === cabId);
-      for (let c2 = c + 1; c2 < cab.cols; c2++) {
-        deviceMatrix[cabId][r][c2] = Math.min(deviceMatrix[cabId][r][c] + (c2 - c), 999);
-      }
+  bEditCtx = { cabId, r, c };
+  document.getElementById('bEditTitle').textContent = '编辑货道编号 · ' + (cab ? cab.name : '');
+  document.getElementById('bEditPos').textContent = letter + '-' + c;
+  document.getElementById('bEditSw').textContent = swNum;
+  const input = document.getElementById('bEditHw');
+  input.classList.remove('err');
+  input.value = (cur === '' || cur === null || cur === undefined) ? '' : cur;
+  openModal('bEditModal');
+  setTimeout(() => { try { input.focus(); input.select(); } catch(e){} }, 280);
+}
+
+function bSubmitEdit() {
+  if (!bEditCtx) { closeModal('bEditModal'); return; }
+  const input = document.getElementById('bEditHw');
+  const { cabId, r, c } = bEditCtx;
+  const raw = (input.value || '').trim();
+  if (raw === '') {
+    deviceMatrix[cabId][r][c] = '';
+  } else {
+    const num = parseInt(raw, 10);
+    if (isNaN(num) || num < 1 || num > 999) {
+      input.classList.add('err');
+      showToast('请输入 1~999 的物理编号');
+      return;
     }
-    renderMatrix(cabId);
-  };
-  input.addEventListener('blur', () => finish(false), { once: true });
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-    if (e.key === 'Escape') { e.preventDefault(); finish(true); }
-  });
+    input.classList.remove('err');
+    deviceMatrix[cabId][r][c] = num;
+    // 同层后续货道自动递增：new(c+1)=n+1、new(c+2)=n+2 …（只影响本层）
+    const cab = deviceCabinets.find(x => x.id === cabId);
+    for (let c2 = c + 1; c2 < cab.cols; c2++) {
+      deviceMatrix[cabId][r][c2] = Math.min(num + (c2 - c), 999);
+    }
+  }
+  closeModal('bEditModal');
+  bEditCtx = null;
+  renderMatrix(cabId);
 }
 
 function bClearMapping() {
@@ -1071,7 +1140,7 @@ function bConfirmClear() {
   closeModal('bClearConfirm');
   renderMatrix(cabId);
   updateModifyStat();
-  showToast('已清空「' + cab.name + '」映射，点击物号可逐格补填');
+  showToast('已清空「' + cab.name + '」映射，点击货道可逐格补填物理编号');
 }
 
 /* ============ 保存 → 推送 ============ */
