@@ -224,17 +224,10 @@ body { min-height: 100vh; padding: 0; }
 .matrix-hint { font-size: 11px; color: #888; margin-bottom: 8px; padding: 0 4px; }
 .matrix-hint b { color: #EF9F27; font-weight: 600; }
 .matrix { font-size: 11px; }
-/* 顶部列号头：0~9（带底色，与矩阵列一一对应） */
-.lane-head { display: flex; gap: 4px; margin-bottom: 4px; }
-.lane-head-axis { width: 34px; flex-shrink: 0; }
-.lane-head-cells { flex: 1; display: grid; gap: 4px; }
-.lane-head-cell { font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; text-align: center; line-height: 16px; }
-/* 行头：左侧行标字母（A~，带底色）+ 上下两段「软」(灰) /「物」(橙)，点行头选中/取消整层 */
+/* 行头：上下两段「软」(灰) /「物」(橙)，点行头选中/取消整层 */
 .lane-body { display: flex; gap: 4px; }
-.row-axis { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.ra { display: flex; align-items: stretch; gap: 3px; flex-shrink: 0; }
-.ra .lbl { width: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; }
-.ra .segs { flex: 1; display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
+.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
 .ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
 .ra .seg.sw { background: #ECECEF; color: #8E8E93; }
 .ra .seg.gw { background: #FFF3E0; color: #EF9F27; }
@@ -515,7 +508,7 @@ body { min-height: 100vh; padding: 0; }
 <p class="req-p">有屏机器详情补齐<strong>货道映射</strong>与<strong>货道检测</strong>两项能力，与无屏机器对齐；货道映射支持「选模板 → 本地预览 → 保存生效」，货道检测支持单个 / 整层 / 整柜并覆盖主柜副柜。</p>
 </div><div class="req-section">
   <div class="req-h">二、货道映射</div>
-<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道映射</li><li><strong>柜体 Tab</strong>：主柜 / 副柜1… 各自独立矩阵；修改数量统一在工具栏右侧「已修改 N 项」展示，Tab 不显示角标、右上角不显示柜体总览</li><li><strong>矩阵展示（上软下物）</strong>：每格双行——上=软件编号（<b>灰色</b>，自动生成·只读，软件编号 = 起始编号 10 + 行×10 + 列）/ 下=物理编号（<b>橙色</b>，可编辑）；<b>顶部带 0~9 列号头（灰底）</b>、<b>左侧带行标字母 A~（灰底）</b>，两者均有底色，用于定位；左侧行头为行标字母 + 上下两段「软」(灰)/「物」(橙)，与格子同构</li><li><strong>物理编号编辑（底部弹窗）</strong>：点击<b>物理编号</b>半格或空格「+」→ 底部弹出编辑弹窗，展示<b>货道列号（如 A-0）</b>、<b>软件编号（只读）</b>、<b>物理编号（唯一可编辑项）</b>；物理编号输入 1~999，点「确定」生效；<b>确认后同层后续货道自动递增</b>（= 新值+1、+2…，只影响本层不跨层），递增格标修改态；物理编号 ≠ 默认物号时黄底（已修改）；空格点「+」可补填</li><li><strong>配置货道映射（模板应用）</strong>：工具栏「配置货道映射」打开模板选择弹窗（按当前柜体规格过滤模板，支持名称搜索、展开全部层预览）；点「应用」仅本地预览覆盖当前柜体映射，点「保存」后才推送生效；模板与柜体规格不一致时弹出警告，可取消或强制应用</li><li><strong>保存推送</strong>：点「保存」后才真正推送设备；<b>按柜体逐个推送</b>（主柜 → 副柜1 → …），顶部黄条 toast 展示逐柜进度，失败可重试；<b>保存后停留当前货道映射页，不自动返回</b>（用户手动点左上角返回）；「清空本柜」二次确认且仅清当前柜体</li></ul>
+<ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道映射</li><li><strong>柜体 Tab</strong>：主柜 / 副柜1… 各自独立矩阵；修改数量统一在工具栏右侧「已修改 N 项」展示，Tab 不显示角标、右上角不显示柜体总览</li><li><strong>矩阵展示（上软下物）</strong>：每格双行——上=软件编号（<b>灰色</b>，自动生成·只读，软件编号 = 起始编号 10 + 行×10 + 列）/ 下=物理编号（<b>橙色</b>，可编辑）；<b>无 0~9 列号表头</b>、<b>无左侧行标字母列</b>；左侧行头为上下两段「软」(灰)/「物」(橙)，与格子同构</li><li><strong>物理编号编辑（底部弹窗）</strong>：点击<b>物理编号</b>半格或空格「+」→ 底部弹出编辑弹窗，展示<b>货道列号（如 A-0）</b>、<b>软件编号（只读）</b>、<b>物理编号（唯一可编辑项）</b>；物理编号输入 1~999，点「确定」生效；<b>确认后同层后续货道自动递增</b>（= 新值+1、+2…，只影响本层不跨层），递增格标修改态；物理编号 ≠ 默认物号时黄底（已修改）；空格点「+」可补填</li><li><strong>配置货道映射（模板应用）</strong>：工具栏「配置货道映射」打开模板选择弹窗（按当前柜体规格过滤模板，支持名称搜索、展开全部层预览）；点「应用」仅本地预览覆盖当前柜体映射，点「保存」后才推送生效；模板与柜体规格不一致时弹出警告，可取消或强制应用</li><li><strong>保存推送</strong>：点「保存」后才真正推送设备；<b>按柜体逐个推送</b>（主柜 → 副柜1 → …），顶部黄条 toast 展示逐柜进度，失败可重试；<b>保存后停留当前货道映射页，不自动返回</b>（用户手动点左上角返回）；「清空本柜」二次确认且仅清当前柜体</li></ul>
 </div><div class="req-section">
   <div class="req-h">三、货道检测</div>
 <ul class="req-ul"><li><strong>入口</strong>：机器详情 → 全部功能 → 货道检测</li><li><strong>检测维度</strong>：单个货道（点格子）/ 整层（点「检测整层」）/ 整柜（点「检测整机」）</li><li><strong>柜体支持</strong>：主柜、副柜均支持；切换 Tab 后矩阵与状态按新柜体刷新</li><li><strong>状态流转</strong>：检测中（黄色闪烁）→ 正常（绿）/ 故障（红/橙）；检测中格子禁止重复触发</li><li><strong>结果展示</strong>：底部实时显示选中货道编号与状态；超时（&gt;15s 无回执）标记故障并 toast 提示</li></ul>
@@ -1023,17 +1016,10 @@ function renderMatrix(cabId) {
   const mat = deviceMatrix[cabId];
   const m = document.getElementById('bMatrix');
   const cols = cab.cols, rows = cab.rows;
-  // 顶部列号头：0 ~ cols-1（带底色，与矩阵列一一对应）
-  let hh = '';
-  for (let c = 0; c < cols; c++) hh += '<div class="lane-head-cell">' + c + '</div>';
-  const head = '<div class="lane-head"><div class="lane-head-axis"></div>'
-             + '<div class="lane-head-cells" style="grid-template-columns:repeat(' + cols + ',1fr)">' + hh + '</div></div>';
-  // 行头：左侧行标字母（A~，带底色）+ 上下两段「软」(灰) /「物」(橙)
+  // 行头：上下两段「软」(灰) /「物」(橙)
   let rh = '';
   for (let r = 0; r < rows; r++) {
-    const letter = String.fromCharCode(65 + r);
-    rh += '<div class="ra"><div class="lbl">' + letter + '</div>'
-       +  '<div class="segs"><div class="seg sw">软</div><div class="seg gw">物</div></div></div>';
+    rh += '<div class="ra"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
   }
   // 格子：上=软件编号（灰，自动生成只读）/ 下=物理编号（橙，点击=底部弹窗编辑）
   let h = '';
@@ -1051,8 +1037,7 @@ function renderMatrix(cabId) {
          +  '</div>';
     }
   }
-  m.innerHTML = head
-    + '<div class="lane-body"><div class="row-axis">' + rh + '</div>'
+  m.innerHTML = '<div class="lane-body"><div class="row-axis">' + rh + '</div>'
     + '<div class="cells" style="grid-template-columns:repeat(' + cols + ',1fr)">' + h + '</div></div>';
   updateModifyStat();
 }
