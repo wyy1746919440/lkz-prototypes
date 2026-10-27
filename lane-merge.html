@@ -66,16 +66,9 @@ body { min-height: 100vh; padding: 0; }
 .matrix-hint b { color: #EF9F27; font-weight: 600; }
 .matrix { background: #fff; border-radius: 12px; padding: 10px; font-size: 11px; }
 .lane-body { display: flex; gap: 4px; align-items: flex-start; }
-/* 顶部列号头：0~9（与矩阵列一一对应） */
-.lane-head { display: flex; gap: 4px; margin-bottom: 4px; }
-.lane-head-axis { width: 34px; flex-shrink: 0; }
-.lane-head-cells { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
-.lane-head-cell { font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; text-align: center; line-height: 16px; }
-/* 行头：左侧行标字母（A~J）+ 上下两段「软」(灰) /「物」(橙)，与格子上软下物一一对应，静态不可点 */
-.row-axis { width: 34px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
-.ra { display: flex; align-items: stretch; gap: 3px; flex-shrink: 0; }
-.ra .lbl { width: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #8E8E93; background: #ECECEF; border-radius: 4px; }
-.ra .segs { flex: 1; display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
+/* 行头：上下两段「软」(灰) /「物」(橙)，与格子上软下物一一对应，静态不可点 */
+.row-axis { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; }
+.ra { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
 .ra .seg { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
 .ra .seg.sw { background: #ECECEF; color: #8E8E93; }
 .ra .seg.gw { background: #FFF3E0; color: #EF9F27; }
@@ -297,13 +290,13 @@ body { min-height: 100vh; padding: 0; }
     <!-- ============ 右侧需求说明 ============ -->
     <div class="req-panel">
       <div class="req-panel-hd">
-        <span class="req-panel-hd-title">需求说明 — 机器详情（货道合并）<span class="req-ver">v2.1</span></span>
+        <span class="req-panel-hd-title">需求说明 — 机器详情（货道合并）<span class="req-ver">v2.2</span></span>
         <a class="req-download-btn" href="机器详情-货道合并-需求说明.md" download title="下载详细需求说明 Markdown 文档">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a.75.75 0 0 1 .75.75v6.69l1.97-1.97a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 8.03a.75.75 0 0 1 1.06-1.06l1.97 1.97V2.25A.75.75 0 0 1 8 1.5Zm-5.75 11a.75.75 0 0 1 .75.75V13a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-.25a.75.75 0 0 1 1.5 0V13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-.75a.75.75 0 0 1 .75-.75Z"/></svg>
           下载详细需求说明
         </a>
       </div>
-      <p class="req-note">⚠️ <strong>迭代说明</strong>：第一～五章<strong>完整保留原文未作改写</strong>；v1 → v2 的变更集中见<strong>第六章</strong>，v2 → v2.1 的变更（恢复列号头 + 行标字母，保留上软下物）集中见<strong>第七章</strong>。开发请先读第六、七章再对照正文。</p>
+      <p class="req-note">⚠️ <strong>迭代说明</strong>：第一～五章<strong>完整保留原文未作改写</strong>；v1 → v2 的变更集中见<strong>第六章</strong>，v2 → v2.1 的变更（恢复列号头 + 行标字母，保留上软下物）集中见<strong>第七章</strong>，v2.1 → v2.2 的变更（<strong>去掉列号头与行标字母</strong>）集中见<strong>第八章</strong>。开发请先读第六、七、八章再对照正文。</p>
       <div class="req-section">
         <div class="req-h">一、目标</div>
         <p class="req-p">机器详情补齐<strong>货道合并</strong>能力：支持将同柜体多个货道<strong>两两合并</strong>（默认保留奇数物号、统一库存），满足大容量商品陈列与多货道同时出货的场景；交互延续「货道映射」的矩阵操作语言，<strong>仅覆盖合并 / 拆分两个动作</strong>，不扩散到库存、模板等其他功能。</p>
@@ -429,6 +422,24 @@ body { min-height: 100vh; padding: 0; }
           <li>上软下物双段格子形态（v2 引入，本次保留）</li>
           <li>已合并组<strong>无货道数角标</strong>（v2 删除，本次不恢复）</li>
           <li>合并 / 拆组全部业务规则、保存推送、权限与日志；弹窗文案的软号定位方式</li>
+        </ul>
+      </div>
+      <div class="req-section">
+        <div class="req-h">八、本次修改内容（v2.1 → v2.2）</div>
+        <p class="req-p">一句话结论：矩阵<strong>去掉顶部 0~9 列号头与左侧行标字母列</strong>（v2.1 加回来的定位元素再撤掉），行头回到「上下两个小矩形「软」/「物」」形态，轴宽回到 22px；其余<strong>全部不变</strong>。</p>
+        <div class="req-sub">变更对照</div>
+        <table class="req-tbl">
+          <tr><th style="width:20%">变更项</th><th style="width:26%">变更前（v2.1）</th><th style="width:40%">变更后（v2.2）</th><th style="width:14%">类型</th></tr>
+          <tr><td>顶部列号头</td><td>矩阵上方一行 <strong>0~9 列号头</strong></td><td><strong>删除</strong>，矩阵上方不再有列号行</td><td>🔧</td></tr>
+          <tr><td>行标字母列</td><td>行头左侧 <strong>A~J 字母</strong>（宽 12px）</td><td><strong>删除</strong>，行头恢复为仅上下两小矩形「软」/「物」</td><td>🔧</td></tr>
+          <tr><td>轴宽</td><td>34px（字母 12 + 间距 3 + 双段 19）</td><td>回到 <strong>22px</strong></td><td>🔧</td></tr>
+          <tr><td>行头 <code>.ra</code> 结构</td><td><code>.lbl</code> + <code>.segs</code></td><td>回到 <code>&lt;div class="seg sw"&gt;软&lt;/div&gt;&lt;div class="seg gw"&gt;物&lt;/div&gt;</code></td><td>🔧</td></tr>
+          <tr><td>软号 / 物号取值、合并 / 拆组 / 保存、弹窗</td><td>v2.1 全部规则</td><td>不变</td><td>⬜ 未变更</td></tr>
+        </table>
+        <div class="req-sub">明确未变更（避免误改）</div>
+        <ul class="req-ul">
+          <li>上软下物双段格子形态（各 26px、圆角 6px）</li>
+          <li>已合并组无货道数角标；合并 / 拆组业务规则、保存推送；弹窗仍用软号定位</li>
         </ul>
       </div>
     </div>
@@ -594,12 +605,8 @@ function renderMatrix(cabId) {
   // 行头 = 左侧行标字母（A~J）+ 上下两段「软」(灰) /「物」(橙)，与格子上软下物一一对应；静态不参与选择
   let rh = '';
   for (let r = 0; r < rows; r++) {
-    rh += '<div class="ra"><div class="lbl">' + String.fromCharCode(65 + r) + '</div>'
-        + '<div class="segs"><div class="seg sw">软</div><div class="seg gw">物</div></div></div>';
+    rh += '<div class="ra"><div class="seg sw">软</div><div class="seg gw">物</div></div>';
   }
-  // 顶部列号头 0~9
-  let hd = '';
-  for (let c = 0; c < cols; c++) hd += '<div class="lane-head-cell">' + c + '</div>';
   let h = '';
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -618,8 +625,7 @@ function renderMatrix(cabId) {
          + '</div>';
     }
   }
-  m.innerHTML = '<div class="lane-head"><div class="lane-head-axis"></div><div class="lane-head-cells">' + hd + '</div></div>'
-              + '<div class="lane-body"><div class="row-axis">' + rh + '</div><div class="cells">' + h + '</div></div>';
+  m.innerHTML = '<div class="lane-body"><div class="row-axis">' + rh + '</div><div class="cells">' + h + '</div></div>';
   document.getElementById('cMergeCount').textContent = groupCount(cabId);
   updateBottomBtn();
 }
